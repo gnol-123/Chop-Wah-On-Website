@@ -118,7 +118,7 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
   - The layout sets `<html lang={lang}>`, applies Kantumruy Pro, and wraps everything in the tRPC provider, `Header` and `Footer`.
   - `LangSwitch` is a client component. It swaps the first path segment using `usePathname`. Labels are `ខ្មែរ` and `EN`, and it marks the current one with `aria-current`.
   - `Header` shows the logo top-left and `LangSwitch` top-right.
-  - **Logo:** the owner is adding the company logo (blue circle with the gold handshake) to the repo root. Move it to `public/logo.<ext>`. If it isn't there yet, ask the controller rather than guessing.
+  - **Logo:** `logo/logo-512.png` is the company logo, already cut to a transparent circle at 512 px. Copy it to `public/logo.png` (shown with `next/image` at about 44 px) and to `src/app/icon.png` (favicon). Never commit `logo/logo enhanced.png` (the 23 MB original; it's gitignored).
   - **Palette:** register the palette tokens and set the page background to a `mist` → `mist-deep` gradient.
 - [ ] **Step 4: Run the tests again.** `pnpm e2e`. Expected: 4 tests pass.
 - [ ] **Step 5: Commit.** `feat: km/en routes, Khmer font, header and footer`
