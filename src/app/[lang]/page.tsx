@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { dict, isLocale, locales } from "~/i18n";
+import { ShowroomMount } from "./ShowroomMount";
 
 export const dynamicParams = false;
 
@@ -16,8 +17,11 @@ export default async function Page({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   return (
-    <main className="flex min-h-[60vh] items-center justify-center px-4">
-      <h1 className="text-3xl font-bold text-brand">{dict[lang].brand}</h1>
+    <main className="relative h-svh">
+      <h1 className="sr-only">{dict[lang].brand}</h1>
+      <div className="absolute inset-0">
+        <ShowroomMount />
+      </div>
     </main>
   );
 }

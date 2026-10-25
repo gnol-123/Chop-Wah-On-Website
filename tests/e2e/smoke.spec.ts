@@ -21,3 +21,8 @@ test("unknown locale 404s", async ({ page }) => {
   const res = await page.goto("/fr");
   expect(res?.status()).toBe(404);
 });
+
+test("canvas renders", async ({ page }) => {
+  await page.goto("/km");
+  await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
+});
