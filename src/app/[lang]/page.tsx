@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { dict, isLocale, locales } from "~/i18n";
-import { ShowroomMount } from "./ShowroomMount";
+import { Hero } from "~/scene/Hero";
 
 export const dynamicParams = false;
 
@@ -19,9 +19,7 @@ export default async function Page({
   return (
     <main className="relative h-svh">
       <h1 className="sr-only">{dict[lang].brand}</h1>
-      <div className="absolute inset-0">
-        <ShowroomMount />
-      </div>
+      <Hero lang={lang} />
     </main>
   );
 }

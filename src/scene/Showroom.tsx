@@ -11,7 +11,12 @@ import { EYE_HEIGHT, PEDESTAL_TOP, slotPosition } from "./ring";
 import { type Tier } from "./tier";
 import { Water } from "./Water";
 
-export type ShowroomProps = { products: Product[]; tier: Tier; children?: React.ReactNode };
+export type ShowroomProps = {
+  products: Product[];
+  tier: Tier;
+  onTap?: (index: number) => void;
+  children?: React.ReactNode;
+};
 
 /** Sun direction, shared by the sky and the water. High and off to the right. */
 export const SUN: [number, number, number] = [0.4, 0.8, -0.45];
@@ -23,8 +28,9 @@ const sky = (
   <Sky sunPosition={SUN} turbidity={12} rayleigh={0.5} mieCoefficient={0.02} mieDirectionalG={0.3} />
 );
 
-export default function Showroom({ products, tier, children }: ShowroomProps) {
-  const [effectsLow, setEffectsLow] = useState(tier === "low");
+export default function Showroom({ products, tier, onTap, children }: ShowroomProps) {
+  const [declined, setDeclined] = useState(false);
+  const effectsLow = tier === "low" || declined;
   const n = products.length;
 
   return (
@@ -32,7 +38,7 @@ export default function Showroom({ products, tier, children }: ShowroomProps) {
       dpr={effectsLow ? [1, 1.25] : [1, 2]}
       camera={{ fov: 50, position: [0, EYE_HEIGHT, 0], rotation: [0, 0, 0], near: 0.05, far: 2000 }}
     >
-      <PerformanceMonitor onDecline={() => setEffectsLow(true)} />
+      <PerformanceMonitor onDecline={() => setDeclined(true)} />
       <fog attach="fog" args={[MIST, 20, 160]} />
       {sky}
       <Environment resolution={tier === "high" ? 256 : 64} frames={1}>
@@ -45,7 +51,7 @@ export default function Showroom({ products, tier, children }: ShowroomProps) {
       ))}
       <Suspense fallback={null}>
         {products.map((p, i) => (
-          <ProductModel key={p.id} product={p} tier={tier} index={i} count={n} />
+          <ProductModel key={p.id} product={p} tier={tier} index={i} count={n} onTap={onTap} />
         ))}
       </Suspense>
       {children}
