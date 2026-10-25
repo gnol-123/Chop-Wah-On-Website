@@ -17,7 +17,7 @@ export default async function Page({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   return (
-    <main className="relative h-svh">
+    <main className="relative h-dvh">
       <h1 className="sr-only">{dict[lang].brand}</h1>
       <Hero lang={lang} />
     </main>

@@ -20,6 +20,7 @@ type Props = {
   onFaced: (i: number | null) => void;
   onSelect: (i: number | null) => void;
   reducedMotion: boolean;
+  onDrag?: () => void;
 };
 
 const { ACTION } = CameraControlsImpl;
@@ -64,7 +65,7 @@ function flyTo(c: CameraControlsImpl, pos: Vector3, target: Vector3, anim: boole
 const ringTarget = (h: number) => new Vector3(1e-4 * Math.sin(h), EYE_HEIGHT, -1e-4 * Math.cos(h));
 const RING_EYE = new Vector3(0, EYE_HEIGHT, 0);
 
-export function RingControls({ count, selected, onFaced, onSelect, reducedMotion }: Props) {
+export function RingControls({ count, selected, onFaced, onSelect, reducedMotion, onDrag }: Props) {
   const ref = useRef<CameraControlsImpl>(null);
   const scene = useThree((s) => s.scene);
   const faced = useRef<number | null | undefined>(undefined);
@@ -123,7 +124,7 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     const onKey = (e: KeyboardEvent) => {
       const c = ref.current;
       if (!c) return;
-      if (e.target instanceof Element && e.target.closest("a, button, input, select, textarea")) return;
+      if (e.target instanceof Element && e.target.closest("a, button, input, select, textarea, summary, [contenteditable], [role=button]")) return;
       if (e.key === "Escape") return onSelect(null);
       if (selected !== null) return;
       if (e.key === "Enter") {
@@ -148,7 +149,10 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
       makeDefault
       smoothTime={reducedMotion ? 0 : 0.25}
       {...(selected === null ? RING : FOCUS)}
-      onControlStart={() => (dragging.current = true)}
+      onControlStart={() => {
+        dragging.current = true;
+        onDrag?.();
+      }}
       onControlEnd={() => {
         dragging.current = false;
         // Already at rest (finger held still before letting go): no rest event will come.

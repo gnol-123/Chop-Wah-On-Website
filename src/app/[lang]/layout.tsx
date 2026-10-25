@@ -4,7 +4,6 @@ import { type Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
 import { notFound } from "next/navigation";
 
-import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { dict, isLocale } from "~/i18n";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -36,11 +35,10 @@ export default async function LangLayout({
   if (!isLocale(lang)) notFound();
   return (
     <html lang={lang} className={kantumruy.variable}>
-      <body className="relative min-h-screen">
+      <body className="relative h-dvh overflow-hidden">
         <TRPCReactProvider>
           <Header lang={lang} brand={dict[lang].brand} />
           {children}
-          <Footer t={dict[lang]} />
         </TRPCReactProvider>
       </body>
     </html>

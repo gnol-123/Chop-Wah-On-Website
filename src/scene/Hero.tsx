@@ -1,13 +1,17 @@
 "use client";
 
-import { useDetectGPU } from "@react-three/drei";
+import { Loader, useDetectGPU } from "@react-three/drei";
 import dynamic from "next/dynamic";
 import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { type Locale } from "~/i18n";
+import { Footer } from "~/components/Footer";
+import { ProductList } from "~/components/ProductList";
+import { dict, type Locale } from "~/i18n";
 import { products } from "~/products";
+import { Overlay } from "./Overlay";
 import { RingControls } from "./RingControls";
 import { gpuTierFromResult, pickTier, readTierInput, type Tier } from "./tier";
+import { hasWebGL } from "./webgl";
 
 const Showroom = dynamic(() => import("./Showroom"), { ssr: false });
 
@@ -34,13 +38,15 @@ function GpuProbe({ onTier }: { onTier: (gpuTier: number | undefined) => void })
 
 type FocusState = { cwhFocus?: string } | null;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- the overlay (Task 7) reads lang
 export function Hero({ lang }: { lang: Locale }) {
   const [tier, setTier] = useState<Tier | null>(null);
   const [probing, setProbing] = useState(false);
   const [faced, setFaced] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [dragged, setDragged] = useState(false);
+  // No WebGL, or a model failed to load: show the plain product list instead.
+  const [failed, setFailed] = useState(false);
   // True while the current history entry is one we pushed for the open product.
   const pushed = useRef(false);
 
@@ -63,6 +69,10 @@ export function Hero({ lang }: { lang: Locale }) {
   }, [decide]);
 
   useEffect(() => {
+    if (!hasWebGL()) setFailed(true);
+  }, []);
+
+  useEffect(() => {
     const mq = matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setReducedMotion(mq.matches);
     sync();
@@ -83,7 +93,7 @@ export function Hero({ lang }: { lang: Locale }) {
     return () => removeEventListener("popstate", onPop);
   }, []);
 
-  /** Close the product view. Task 7's back button calls this too. */
+  /** Close the product view. The overlay's back button calls this too. */
   const back = useCallback(() => {
     if (!pushed.current) return setSelected(null);
     pushed.current = false; // a second Back before popstate lands must not leave the site
@@ -117,17 +127,32 @@ export function Hero({ lang }: { lang: Locale }) {
           </Suspense>
         </Catch>
       )}
-      {tier && (
-        <Showroom products={products} tier={tier} onTap={select}>
-          <RingControls
-            count={products.length}
-            selected={selected}
-            onFaced={setFaced}
-            onSelect={select}
-            reducedMotion={reducedMotion}
+      {tier && !failed && (
+        <>
+          <Catch onError={() => setFailed(true)}>
+            <Showroom products={products} tier={tier} onTap={select}>
+              <RingControls
+                count={products.length}
+                selected={selected}
+                onFaced={setFaced}
+                onSelect={select}
+                reducedMotion={reducedMotion}
+                onDrag={() => setDragged(true)}
+              />
+            </Showroom>
+          </Catch>
+          <Loader
+            containerStyles={{ background: "#dfeaeb" }}
+            barStyles={{ background: "#2385b1" }}
+            innerStyles={{ background: "#c7d9dd" }}
+            dataStyles={{ color: "#5a6a70" }}
+            dataInterpolation={() => dict[lang].loading}
           />
-        </Showroom>
+          <Overlay lang={lang} faced={faced} selected={selected} onOpen={select} onBack={back} hint={!dragged} />
+        </>
       )}
+      <ProductList lang={lang} visible={failed} />
+      {selected === null && <Footer t={dict[lang]} />}
     </div>
   );
 }

@@ -15,6 +15,14 @@ describe("products", () => {
         expect(t.long).not.toBe("");
       }
   });
+  it("name plus emphasis is the full name", () => {
+    const full: Record<string, Record<"km" | "en", string>> = {
+      "crocodile-oil": { km: "ប្រេងក្រពើ", en: "Crocodile Oil" },
+      "miracle-lady": { km: "គ្រីមគុជខ្យង", en: "Miracle Lady Cream" },
+    };
+    for (const p of products)
+      for (const l of locales) expect(p.text[l].name + (p.text[l].nameEmphasis ?? "")).toBe(full[p.id]![l]);
+  });
   it("model files exist", () => {
     for (const p of products) {
       expect(fs.existsSync("public" + p.model.high)).toBe(true);

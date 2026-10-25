@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { dict } from "~/i18n";
+import { products } from "~/products";
 
 test("root redirects to km", async ({ page }) => {
   await page.goto("/");
@@ -74,4 +76,53 @@ test("reduced motion disables transitions", async ({ page }) => {
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
   await page.keyboard.press("ArrowRight");
   await expect(hero).toHaveAttribute("data-faced", "1", { timeout: 100 });
+});
+
+// On-screen text
+const names = { km: products[0]!.text.km, en: products[0]!.text.en };
+
+for (const lang of ["km", "en"] as const) {
+  test(`facing card shows product name (${lang})`, async ({ page }) => {
+    await page.goto(`/${lang}`);
+    await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+    // Scoped: the sr-only list also holds the names, and 1px elements count as visible.
+    const overlay = page.getByTestId("overlay");
+    await expect(overlay.getByText(names[lang].name, { exact: false }).first()).toBeVisible();
+    await expect(overlay.getByText(names[lang].short)).toBeVisible();
+  });
+}
+
+test("focus panel has sizes and disabled order", async ({ page }) => {
+  await page.goto("/en");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+  await page.keyboard.press("Enter");
+  const overlay = page.getByTestId("overlay");
+  await expect(overlay.getByRole("button", { name: "25ml" })).toBeVisible();
+  await expect(overlay.getByRole("button", { name: "46ml" })).toBeVisible();
+  await expect(overlay.getByRole("button", { name: dict.en.order })).toBeDisabled();
+  await overlay.getByRole("button", { name: dict.en.back }).click();
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-selected", "");
+});
+
+test("no horizontal overflow at 360px in km", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto("/km");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+  const fits = () =>
+    page.evaluate(() => {
+      const e = document.documentElement;
+      return e.scrollWidth <= 360 && e.scrollHeight <= innerHeight;
+    });
+  expect(await fits()).toBe(true);
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-selected", "0");
+  expect(await fits()).toBe(true);
+});
+
+test("model load failure shows product list", async ({ page }) => {
+  await page.route("**/*.glb", (r) => r.abort());
+  await page.goto("/km");
+  const list = page.getByTestId("product-list");
+  await expect(list).toHaveAttribute("data-visible", "true", LOAD);
+  for (const p of products) await expect(list).toContainText(p.text.km.name);
 });
