@@ -2,7 +2,7 @@
 export const RING_RADIUS = 3;
 export const PEDESTAL_TOP = 0.9;
 export const EYE_HEIGHT = 1.3;
-export const FACING_THRESHOLD = 0.35;
+export const FACING_THRESHOLD = 0.2;
 export const TAP_SLOP_PX = 6;
 
 const TAU = 2 * Math.PI;

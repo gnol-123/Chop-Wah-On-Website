@@ -31,6 +31,8 @@ describe("ring", () => {
     expect(facedIndex(-3.1, 2)).toBe(1);
     expect(facedIndex(TAU + 0.05, 2)).toBe(0);
     expect(facedIndex(Math.PI / 2, 2)).toBeNull();
+    // Past the threshold (0.2 rad, about half a phone's horizontal view): nothing faced.
+    expect(facedIndex(0.25, 2)).toBeNull();
     expect(facedIndex(0, 0)).toBeNull();
     expect(facedIndex(2, 1)).toBeNull();
   });

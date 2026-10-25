@@ -19,7 +19,7 @@ export const products: Product[] = [
   {
     id: "crocodile-oil",
     model: { high: "/models/crocodile-oil-46ml.glb", low: "/models/crocodile-oil-46ml.low.glb" },
-    displayScale: 4,
+    displayScale: 8.4,
     sizes: ["25ml", "46ml"],
     text: {
       km: { name: "ប្រេង", nameEmphasis: "ក្រពើ", ...ph.km },
@@ -29,7 +29,7 @@ export const products: Product[] = [
   {
     id: "miracle-lady",
     model: { high: "/models/miracle-lady-cream-jar.glb", low: "/models/miracle-lady-cream-jar.low.glb" },
-    displayScale: 6,
+    displayScale: 14,
     sizes: ["3g", "30g"],
     text: {
       km: { name: "គ្រីម", nameEmphasis: "គុជខ្យង", ...ph.km },

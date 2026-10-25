@@ -43,14 +43,16 @@ const RING = {
 const FOCUS = {
   minPolarAngle: MathUtils.degToRad(30),
   maxPolarAngle: MathUtils.degToRad(100),
-  minDistance: 0.8,
-  maxDistance: 1.8,
+  minDistance: 1.4,
+  maxDistance: 3.2,
   azimuthRotateSpeed: 1,
   mouseButtons: { left: ACTION.ROTATE, middle: ACTION.DOLLY, right: ACTION.NONE, wheel: ACTION.DOLLY },
   touches: { one: ACTION.TOUCH_ROTATE, two: ACTION.TOUCH_DOLLY, three: ACTION.NONE },
 } as const;
-const FOCUS_BACK = 1.15; // horizontal metres from the product towards the ring centre
-const FOCUS_UP = 0.35;
+const FOCUS_BACK = 2.4; // horizontal metres from the product towards the ring centre
+const FOCUS_UP = 0.6;
+/** Phones: the product sheet covers the bottom of the screen, so drop the camera this far (metres) to lift the product above it. */
+const FOCUS_LIFT = 0.3;
 
 const sph = new Spherical();
 
@@ -104,9 +106,12 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     if (!c || selected === prev) return;
 
     if (selected === null) {
+      void c.setFocalOffset(0, 0, 0, anim);
       flyTo(c, RING_EYE, ringTarget(ringHeading.current), anim);
       return;
     }
+    // Same breakpoint as the sheet in Overlay (Tailwind md).
+    void c.setFocalOffset(0, matchMedia("(min-width: 48rem)").matches ? 0 : FOCUS_LIFT, 0, anim);
     ringHeading.current = slotHeading(selected, count);
     const target = new Vector3();
     const obj = scene.getObjectByName(`product-${selected}`);

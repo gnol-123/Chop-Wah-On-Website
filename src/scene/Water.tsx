@@ -7,7 +7,7 @@ import { type Tier } from "./tier";
 
 type Sun = [number, number, number];
 const SIZE = 2000;
-const TINT = "#5f8f94";
+const TINT = "#7fa6ab";
 
 /** Calm water at y = 0. `high` is a mirror with moving normals; `low` a tinted reflective plane. */
 export function Water({ tier, sun }: { tier: Tier; sun: Sun }) {
@@ -26,10 +26,10 @@ function MirrorWater({ sun }: { sun: Sun }) {
       sunDirection: new Vector3(...sun).normalize(),
       sunColor: 0xffffff,
       waterColor: TINT,
-      distortionScale: 0.6,
+      distortionScale: 0.3,
       fog: true,
     });
-    w.material.uniforms.size!.value = 8;
+    w.material.uniforms.size!.value = 4;
     w.rotation.x = -Math.PI / 2;
 
     // The transmission pass renders opaque objects too, which would redraw the
