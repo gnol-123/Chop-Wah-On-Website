@@ -4,9 +4,11 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   use: {
     baseURL: baseURL ?? "http://localhost:3000",
+    trace: "retain-on-failure",
     // Recent Chromium has no automatic SwiftShader fallback; WebGL needs these headless.
     launchOptions: {
       args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"],
