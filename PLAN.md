@@ -23,6 +23,7 @@ We build the site in nine steps, and each one ends with a commit.
 7. **On-screen text.** Add the cards that appear when facing a product, the zoomed-in panel with size chips and the order button, and a plain list for phones that can't do 3D.
 8. **Phone check.** Look at everything at phone size, tune sizes and spacing, and check the jar's colour under the sky.
 9. **Go live.** Get it running on Railway. You connect GitHub to Railway, and I ask before pushing.
+10. **Automatic checks** (done right after step 2). GitHub runs the lint, type check, unit tests and browser tests on every push and pull request. Railway only deploys once those pass.
 
 ## Global Constraints
 
@@ -367,6 +368,43 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
 
 ---
 
+### Task 10: GitHub CI (runs right after Task 2)
+
+**Model:** sonnet
+
+Run this task immediately after Task 2, before Task 3. It's numbered 10 only because it was added after the plan was written.
+
+**Files:**
+- Create: `.github/workflows/ci.yml`
+- Modify: `package.json` (add a `typecheck` script), `playwright.config.ts` (WebGL launch flags)
+
+**Interfaces:**
+- Produces: the CI workflow named `CI`, with one job `check`. Task 9 waits on it before deploying.
+- Produces: `pnpm typecheck` (`tsc --noEmit`).
+
+- [ ] **Step 1: Make WebGL reliable in headless Chromium.** Recent Chromium no longer falls back to SwiftShader on its own. In `playwright.config.ts`, set `use.launchOptions.args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"]`. Every WebGL test from Task 5 on depends on this, locally and in CI.
+- [ ] **Step 2: Add the `typecheck` script.** Then run `pnpm typecheck`. Expected: it exits 0.
+- [ ] **Step 3: Write `.github/workflows/ci.yml`.**
+  - **Triggers:** `push` to `main` and `pull_request`, with `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }`.
+  - **Job `check`** on `ubuntu-latest`, with a 20-minute timeout and env `SKIP_ENV_VALIDATION: 1` (T3's env check; there are no env vars this round). Steps, in this order:
+    1. `actions/checkout@v4`
+    2. `pnpm/action-setup@v4`
+    3. `actions/setup-node@v4` with `node-version: 24` and `cache: pnpm`
+    4. `pnpm install --frozen-lockfile`
+    5. `pnpm lint`
+    6. `pnpm typecheck`
+    7. `pnpm test`
+    8. `pnpm exec playwright install --with-deps chromium`
+    9. `pnpm e2e`
+  - **On failure:** upload `playwright-report/` with `actions/upload-artifact@v4` (`if: failure()`, retention 7 days).
+  - **Package manager:** add `"packageManager": "pnpm@<installed version>"` to `package.json` so `pnpm/action-setup` picks the same version.
+- [ ] **Step 4: Rehearse the CI steps locally.** With `CI=true SKIP_ENV_VALIDATION=1`, run steps 4–9 in the same order locally (`--frozen-lockfile` included). Expected: every step passes. Then validate the workflow syntax with `pnpm dlx @action-validator/cli .github/workflows/ci.yml`. Expected: no errors.
+- [ ] **Step 5: Commit.** `ci: lint, typecheck, unit and e2e tests on GitHub Actions`
+
+The first real CI run happens on the push in Task 9.
+
+---
+
 ### Task 9: Go live on Railway
 
 **Model:** sonnet (the controller runs this one; it needs the owner)
@@ -376,12 +414,13 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
 - [ ] **Step 1: Pre-flight.** `pnpm build && pnpm start` locally with `PORT=4123`. `curl -I localhost:4123/km` returns 200.
 - [ ] **Step 2: Owner logs in.** Ask the owner to run `! gh auth login` and `! railway login`.
 - [ ] **Step 3: Owner approves the push.** Show `git log --oneline origin/main..main` (or the full log if the remote is empty) and ask: "OK to push `main` to `gnol-123/Chop-Wah-On-Website`?" Push only on a yes.
-- [ ] **Step 4: Owner connects Railway.** In the Railway dashboard, they create a project and deploy from GitHub repo `gnol-123/Chop-Wah-On-Website`, then generate a domain. Then run `railway link` locally so the logs are readable.
-- [ ] **Step 5: Verify live.** `railway logs` shows `Ready`. Then:
+- [ ] **Step 4: CI goes green.** Run `gh run watch` on the push's `CI` run. Expected: the `check` job passes. If it fails, fix it before deploying.
+- [ ] **Step 5: Owner connects Railway.** In the Railway dashboard, they create a project and deploy from GitHub repo `gnol-123/Chop-Wah-On-Website`, then turn on **Wait for CI** in the service settings so a red build never deploys. Then they generate a domain. Then run `railway link` locally so the logs are readable.
+- [ ] **Step 6: Verify live.** `railway logs` shows `Ready`. Then:
   - `curl -I https://<domain>/` gives a 307 to `/km`.
   - `/km` and `/en` return 200.
   - Run the Playwright smoke suite against the domain: `PLAYWRIGHT_BASE_URL=https://<domain> pnpm e2e` (`playwright.config.ts` reads that variable and skips `webServer` when it's set).
-- [ ] **Step 6: Owner checks a real phone.** Ask the owner to open the domain on a real phone and report how it looks and feels.
+- [ ] **Step 7: Owner checks a real phone.** Ask the owner to open the domain on a real phone and report how it looks and feels.
 
 ---
 
