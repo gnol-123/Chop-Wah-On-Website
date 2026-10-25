@@ -19,18 +19,24 @@ The owner looked at round 1 and asked for four changes:
 3. **Bases, not pedestals.** Each product sits on a little base on top of the water, not a tall column. The whole render should look more realistic.
 4. **Text pops up.** While looking around, the text for the product you're facing pops up next to it.
 
-We do it in four steps, each ending with a commit:
+Then the owner flagged that the Miracle Lady jar is the old model (mint cream, wrong proportions). The improved jar exists only as ingredients in the 3D workspace, so we build a new jar file from them and swap it in.
+
+We do it in six steps, each ending with a commit (step 4 happens in the 3D workspace, which has no git):
 
 1. **Sky and water.** Paint a blue sky with soft clouds in code (no image download), make the water bluer to match, and retune the sun and fog so it all feels like one dreamy place.
 2. **Bases and realism.** Swap the columns for a low disc sitting at the water line, lower the camera so the products fill the view, and add soft shadows so the products feel like they're really standing there.
 3. **Pop-up text.** When you face a product, a card with its name, short description and sizes pops up beside it in the scene. Tap it to open the product. It goes away when you turn.
-4. **Check and tune.** Look at it on phone and desktop sizes, both quality levels, tune by eye, and update the design doc.
+4. **New jar model.** In the 3D workspace, build a new jar file with the true shape (56 mm tall), the neutral pearl cream and the corrected cap, following the workspace's handoff.
+5. **Jar on the site.** Copy it in, make the phone version, re-check its size next to the bottle, and check its colours under the new sky.
+6. **Check and tune.** Look at it on phone and desktop sizes, both quality levels, tune by eye, and update the design doc.
+
+Not doing: the handoff's optional Part C (porting the jar's ray tracer into the scene). It's a big job, heavy on phones, and the new GLB fixes the reported problems. Revisit if the GLB still doesn't read as thick acrylic.
 
 ## Global Constraints
 
 - **Branch:** `feat/dreamy-scene`. Commit at the end of every task with the trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. **Never push**, amend, or rewrite history.
 - **Package manager:** pnpm. **No new dependencies.** Everything here is three, drei and CSS.
-- **Never read `.env` files.** Never edit `C:\Users\SL\Desktop\CWH-site` or the sales tracker.
+- **Never read `.env` files.** Never edit the sales tracker. In `C:\Users\SL\Desktop\CWH-site` only Task 4 writes, and only the files it names. CWH-site has no git.
 - **Text:** all user-visible text is real DOM text from `src/i18n.ts` / `src/products.ts`, never drawn into the canvas. drei `<Html>` counts as DOM.
 - **Sky:** built in code, no texture download. One sky source drives the visible sky, the `<Environment>` map, and the water's reflection.
 - **Palette (UI):** `mist` `#dfeaeb`, `brand` `#2385b1`, `ink` `#5a6a70`, `ink-soft` `#8a9aa0`. Panels white/pale translucent, never dark.
@@ -263,7 +269,56 @@ git commit -m "feat: pop-up callout beside the faced product"
 
 ---
 
-### Task 4: Tune by eye and update the spec
+### Task 4: Jar v2 GLB (in CWH-site)
+
+**Model:** opus.
+
+**Spec:** `C:\Users\SL\Desktop\CWH-site\3d\products\miracle-lady-cream-jar\HANDOFF-website.md`, **Part A only**, steps 1–7. Its values are binding.
+
+**Files (all in CWH-site):**
+- Create: `3d/products/miracle-lady-cream-jar/build_v2.py`
+- Overwrite: `models/miracle-lady-cream-jar.glb` (copy the old one to `models/_exp/miracle-lady-cream-jar.v1.glb` first)
+- Modify: `3d/README.md` (short note in the jar section)
+- Leave `build.py` unchanged.
+
+**Interfaces:**
+- Produces: `models/miracle-lady-cream-jar.glb`, true-scale metres, Y up, base at origin, front +Z, 56 mm tall, 53 mm front-to-back, ~1–1.5 MB, extensions `EXT_texture_webp`, `KHR_materials_transmission`, `KHR_materials_volume`, `KHR_materials_ior`.
+
+- [ ] **Step 1:** Write `build_v2.py` per Part A steps 1–5.
+- [ ] **Step 2:** Run it; run `python 3d/lib/gltf.py` (self-checks pass).
+- [ ] **Step 3:** `npx --yes @gltf-transform/cli@4.1.1 validate models/miracle-lady-cream-jar.glb` → no errors. Print the bounding box: height 0.056 m, depth 0.053 m (±0.5 mm). File size 1–1.5 MB.
+- [ ] **Step 4:** Render a quick visual check (`3d/preview.html` or Blender) to confirm hollows, cream, cap, threads, foil and back print are present and oriented right. Colour is judged on the site in Task 5, not here.
+- [ ] **Step 5:** README note. No commit (CWH-site is not a git repo).
+
+---
+
+### Task 5: Jar v2 on the site
+
+**Model:** sonnet.
+
+**Spec:** the same handoff, **Part B**.
+
+**Files:**
+- Overwrite: `public/models/miracle-lady-cream-jar.glb`, `public/models/miracle-lady-cream-jar.low.glb`
+- Modify: `src/products.ts` (`displayScale` for `miracle-lady`)
+
+**Interfaces:**
+- Consumes: Task 4's GLB; the scene from Tasks 1–3 (sky dome, bases, callout).
+
+- [ ] **Step 1:** Copy the GLB in; run `pnpm models:low` (regenerates `.low.glb`, validates).
+- [ ] **Step 2:** Re-check `displayScale` (jar is ~9% taller): smaller than the bottle but clearly readable when faced.
+- [ ] **Step 3:** Screenshot the jar faced at `?tier=high` and `?tier=low`, next to `C:\Users\SL\Desktop\CWH-site\product-pics\DSC01355.JPG`. Pass when the cream reads pale rose-white (not mint) and the cap rose-gold. If the cream is off, adjust its albedo in `build_v2.py` (brightness, slight pink, never cyan), rebuild, repeat Step 1.
+- [ ] **Step 4:** `pnpm lint && pnpm typecheck && pnpm test`, all pass.
+- [ ] **Step 5: Commit**
+
+```bash
+git add public/models src/products.ts
+git commit -m "feat: miracle lady jar v2 model"
+```
+
+---
+
+### Task 6: Tune by eye and update the spec
 
 **Model:** sonnet.
 
