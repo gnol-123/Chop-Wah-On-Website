@@ -23,6 +23,9 @@ export type ShowroomProps = {
 /** Sun direction, shared by the sky and the water. About 30° up, 30° right of slot 0. */
 export const SUN: [number, number, number] = [0.43, 0.5, -0.75];
 
+/** Light placed 12 m out along SUN so the shadow camera sees the whole ring. */
+const SUN_POS = SUN.map((v) => v * 12) as [number, number, number];
+
 // ponytail: fixed wait after the models mount; key it off renderer.compileAsync if slow phones still trip it.
 const SETTLE_MS = 2000;
 
@@ -55,7 +58,7 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
           <SkyDome sun={SUN} />
         </Environment>
         <directionalLight
-          position={SUN}
+          position={SUN_POS}
           intensity={1}
           color="#fff3e2"
           castShadow
@@ -64,8 +67,8 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
           shadow-camera-right={4.5}
           shadow-camera-top={4.5}
           shadow-camera-bottom={-4.5}
-          shadow-camera-near={0.5}
-          shadow-camera-far={20}
+          shadow-camera-near={1}
+          shadow-camera-far={30}
           shadow-bias={-0.0005}
           shadow-normalBias={0.02}
           shadow-radius={4}
