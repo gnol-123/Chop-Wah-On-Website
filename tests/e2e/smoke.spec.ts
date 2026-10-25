@@ -114,7 +114,7 @@ test("callout follows the faced product", async ({ page }) => {
   await expect(left).toContainText(products[0]!.text.en.short);
   await page.keyboard.press("ArrowRight");
   await expect(hero).toHaveAttribute("data-faced", "1", LOAD);
-  await expect(left).toContainText(products[1]!.text.en.short, LOAD);
+  await expect(left).toContainText(products[1]!.text.en.short);
   await page.keyboard.press("Enter");
   await expect(hero).toHaveAttribute("data-selected", "1");
   await expect(callout).toHaveCount(0);
@@ -128,11 +128,14 @@ test("tapping callout opens product", async ({ page }) => {
 });
 
 test("callout fits at 360px in km", async ({ page }) => {
+  // Reduced motion: no pop/emerge transforms in flight while measuring.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("/km");
   await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
   const header = (await page.locator("header").boundingBox())!;
   for (const id of ["callout", "callout-left", "callout-right"]) {
+    await expect(page.getByTestId(id)).toBeVisible(LOAD);
     const box = (await page.getByTestId(id).boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(360);

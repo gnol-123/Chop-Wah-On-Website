@@ -6,12 +6,13 @@ import { type Locale } from "~/i18n";
 import { type Product } from "~/products";
 import { calloutAnchor } from "./ring";
 
-const panel = "rounded-2xl bg-white/70 backdrop-blur-md px-4 py-3 text-sm [overflow-wrap:anywhere]";
+const panel = "rounded-2xl bg-white/80 px-4 py-3 text-sm [overflow-wrap:anywhere]";
 const width = "w-[min(16rem,80vw)]";
 
 /** Same breakpoint as RingControls and the sheet in Overlay (Tailwind md). */
 function useWide() {
-  const [wide, setWide] = useState(false);
+  // Client-only component: read the breakpoint up front so desktop never mounts the phone layout first.
+  const [wide, setWide] = useState(() => matchMedia("(min-width: 48rem)").matches);
   useEffect(() => {
     const mq = matchMedia("(min-width: 48rem)");
     const sync = () => setWide(mq.matches);
@@ -54,14 +55,14 @@ export function Callout({ product, lang, index, count, footprint, height, onOpen
       </Html>
       {wide ? (
         <>
-          <Html position={calloutAnchor(index, count, -side, height * 0.5)} zIndexRange={[4, 4]}>
+          <Html position={calloutAnchor(index, count, -side, height * 0.5)} zIndexRange={[4, 4]} pointerEvents="none">
             <div className="-translate-x-full -translate-y-1/2">
               <p data-testid="callout-left" className={`${panel} ${width} text-right animate-emerge-left`}>
                 {t.short}
               </p>
             </div>
           </Html>
-          <Html position={calloutAnchor(index, count, side, height * 0.5)} zIndexRange={[4, 4]}>
+          <Html position={calloutAnchor(index, count, side, height * 0.5)} zIndexRange={[4, 4]} pointerEvents="none">
             <div className="-translate-y-1/2">
               <p data-testid="callout-right" className={`${panel} ${width} animate-emerge-right`}>
                 {t.detail}
@@ -70,7 +71,7 @@ export function Callout({ product, lang, index, count, footprint, height, onOpen
           </Html>
         </>
       ) : (
-        <Html position={calloutAnchor(index, count, 0, -0.08)} zIndexRange={[4, 4]}>
+        <Html position={calloutAnchor(index, count, 0, -0.08)} zIndexRange={[4, 4]} pointerEvents="none">
           <div className="flex -translate-x-1/2 flex-col gap-2 text-center">
             <p data-testid="callout-left" className={`${panel} ${width} animate-emerge-down`}>
               {t.short}
