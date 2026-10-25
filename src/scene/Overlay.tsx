@@ -8,6 +8,8 @@ import { products } from "~/products";
 
 const panel = "pointer-events-auto bg-white/70 backdrop-blur-md [overflow-wrap:anywhere]";
 const chip = "rounded-full border border-brand px-3 py-0.5 text-sm";
+/** Invisible 44px-tall hit area around a compact control. */
+const hit = "relative before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']";
 
 type Props = {
   lang: Locale;
@@ -38,7 +40,7 @@ function Focus({ lang, index, onBack }: { lang: Locale; index: number; onBack: (
             type="button"
             aria-pressed={s === size}
             onClick={() => setSize(s)}
-            className={`${chip} ${s === size ? "bg-brand text-white" : "text-brand"}`}
+            className={`${chip} ${hit} ${s === size ? "bg-brand text-white" : "text-brand"}`}
           >
             {s}
           </button>
@@ -58,7 +60,7 @@ function Focus({ lang, index, onBack }: { lang: Locale; index: number; onBack: (
           {t.orderSoon}
         </span>
       </div>
-      <button type="button" onClick={onBack} className="self-start rounded-full px-1 text-brand underline underline-offset-4">
+      <button type="button" onClick={onBack} className="min-h-11 min-w-11 self-start rounded-full px-1 text-brand underline underline-offset-4">
         {t.back}
       </button>
     </section>

@@ -29,7 +29,7 @@ const TAU = 2 * Math.PI;
 const near = (a: number, ref: number) => a - TAU * Math.round((a - ref) / TAU);
 
 // Ring: stand still and turn. Focus: orbit the product and dolly a little.
-// ponytail: feel values (speeds, focus distance) are first guesses, tune in Task 8.
+// ponytail: feel values (speeds, focus distance) are first guesses; tune them on real phones.
 const RING = {
   minPolarAngle: Math.PI / 2,
   maxPolarAngle: Math.PI / 2,
@@ -129,10 +129,15 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     const onKey = (e: KeyboardEvent) => {
       const c = ref.current;
       if (!c) return;
-      if (e.target instanceof Element && e.target.closest("a, button, input, select, textarea, summary, [contenteditable], [role=button]")) return;
+      const el = e.target instanceof Element ? e.target : null;
+      // Typing never turns the ring. Focused buttons and links still get Escape and the arrows.
+      if (el?.closest("input, textarea, select, [contenteditable]")) return;
       if (e.key === "Escape") return onSelect(null);
       if (selected !== null) return;
-      if (e.key === "Enter") {
+      if (e.key === "Enter" || e.key === " ") {
+        // Let a focused control activate itself.
+        if (el?.closest("a, button, summary, [role=button]")) return;
+        e.preventDefault();
         if (faced.current != null) onSelect(faced.current);
         return;
       }

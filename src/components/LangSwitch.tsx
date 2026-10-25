@@ -10,13 +10,13 @@ const labels: Record<Locale, string> = { km: "ខ្មែរ", en: "EN" };
 export function LangSwitch({ lang }: { lang: Locale }) {
   const rest = (usePathname() ?? "").split("/").slice(2).join("/");
   return (
-    <nav className="flex gap-3 text-sm">
+    <nav className="flex gap-1 text-sm">
       {locales.map((l) => (
         <Link
           key={l}
           href={`/${l}${rest ? `/${rest}` : ""}`}
           aria-current={l === lang ? "true" : undefined}
-          className={l === lang ? "font-bold text-brand" : "text-ink-soft"}
+          className={`inline-flex min-h-11 min-w-11 items-center justify-center ${l === lang ? "font-bold text-brand" : "text-ink-soft"}`}
         >
           {labels[l]}
         </Link>

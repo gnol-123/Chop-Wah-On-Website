@@ -8,6 +8,7 @@ export function isLocale(x: string): x is Locale {
 
 export type Dict = {
   brand: string;
+  description: string;
   dragHint: string;
   loading: string;
   sizes: string;
@@ -22,6 +23,7 @@ export type Dict = {
 export const dict: Record<Locale, Dict> = {
   km: {
     brand: "[placeholder] ជប់វ៉ាអន",
+    description: "[placeholder] ផលិតផលរបស់ជប់វ៉ាអន ជាទម្រង់ 3D",
     dragHint: "[placeholder] អូសដើម្បីបង្វិល",
     loading: "[placeholder] កំពុងផ្ទុក",
     sizes: "[placeholder] ទំហំ",
@@ -34,6 +36,7 @@ export const dict: Record<Locale, Dict> = {
   },
   en: {
     brand: "[placeholder] Chop Wah On",
+    description: "[placeholder] Chop Wah On products in 3D",
     dragHint: "[placeholder] Drag to turn",
     loading: "[placeholder] Loading",
     sizes: "[placeholder] Sizes",

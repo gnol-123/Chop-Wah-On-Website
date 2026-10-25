@@ -1,19 +1,20 @@
 "use client";
 
-import { Loader, useDetectGPU } from "@react-three/drei";
 import dynamic from "next/dynamic";
-import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Footer } from "~/components/Footer";
 import { ProductList } from "~/components/ProductList";
 import { dict, type Locale } from "~/i18n";
 import { products } from "~/products";
 import { Overlay } from "./Overlay";
-import { RingControls } from "./RingControls";
-import { gpuTierFromResult, pickTier, readTierInput, type Tier } from "./tier";
+import { pickTier, readTierInput, type Tier } from "./tier";
 import { hasWebGL } from "./webgl";
 
-const Showroom = dynamic(() => import("./Showroom"), { ssr: false });
+// Everything three/R3F lives behind these two imports, out of the page's initial JS.
+// lazy, not next/dynamic: Showroom only renders client-side, and lazy lets Hero's Suspense show the loading line.
+const Showroom = lazy(() => import("./Showroom"));
+const GpuProbe = dynamic(() => import("./GpuProbe"), { ssr: false });
 
 const GPU_TIMEOUT_MS = 2000;
 
@@ -22,18 +23,13 @@ class Catch extends Component<{ onError: () => void; children: ReactNode }, { fa
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch() {
+  componentDidCatch(error: unknown) {
+    console.error(error);
     this.props.onError();
   }
   render() {
     return this.state.failed ? null : this.props.children;
   }
-}
-
-function GpuProbe({ onTier }: { onTier: (gpuTier: number | undefined) => void }) {
-  const gpu = useDetectGPU();
-  useEffect(() => onTier(gpuTierFromResult(gpu)), [gpu, onTier]);
-  return null;
 }
 
 type FocusState = { cwhFocus?: string } | null;
@@ -112,6 +108,16 @@ export function Hero({ lang }: { lang: Locale }) {
     [back],
   );
 
+  // Until the canvas is up; drei's Loader (same look) takes over once the models start loading.
+  const loading = (
+    <div data-testid="loading" className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
+      <div className="w-[100px] text-center">
+        <div className="h-[3px] bg-mist-deep" />
+        <p className="mt-[0.8em] text-xs whitespace-nowrap text-ink">{dict[lang].loading}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div
       data-testid="hero"
@@ -127,28 +133,29 @@ export function Hero({ lang }: { lang: Locale }) {
           </Suspense>
         </Catch>
       )}
+      {!failed && tier === null && loading}
       {tier && !failed && (
         <>
-          <Catch onError={() => setFailed(true)}>
-            <Showroom products={products} tier={tier} onTap={select}>
-              <RingControls
-                count={products.length}
-                selected={selected}
-                onFaced={setFaced}
-                onSelect={select}
-                reducedMotion={reducedMotion}
-                onDrag={() => setDragged(true)}
-              />
-            </Showroom>
-          </Catch>
-          <Loader
-            containerStyles={{ background: "#dfeaeb" }}
-            barStyles={{ background: "#2385b1" }}
-            innerStyles={{ background: "#c7d9dd" }}
-            dataStyles={{ color: "#5a6a70" }}
-            dataInterpolation={() => dict[lang].loading}
-          />
+          {/* Before the Showroom so its Loader (same z) covers the cards while models load. */}
           <Overlay lang={lang} faced={faced} selected={selected} onOpen={select} onBack={back} hint={!dragged} />
+          <Catch onError={() => setFailed(true)}>
+            <Suspense fallback={loading}>
+              <Showroom
+                products={products}
+                tier={tier}
+                onTap={select}
+                loadingText={dict[lang].loading}
+                controls={{
+                  count: products.length,
+                  selected,
+                  onFaced: setFaced,
+                  onSelect: select,
+                  reducedMotion,
+                  onDrag: () => setDragged(true),
+                }}
+              />
+            </Suspense>
+          </Catch>
         </>
       )}
       <ProductList lang={lang} visible={failed} />

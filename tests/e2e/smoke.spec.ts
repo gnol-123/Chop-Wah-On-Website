@@ -17,6 +17,7 @@ test("switch goes to en", async ({ page }) => {
   await page.goto("/km");
   await page.getByRole("link", { name: "EN" }).click();
   await expect(page).toHaveURL(/\/en$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
 
 test("unknown locale 404s", async ({ page }) => {
@@ -55,6 +56,17 @@ test("enter opens and escape closes", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(hero).toHaveAttribute("data-selected", "");
   await expect(page).toHaveURL(/\/km$/);
+});
+
+test("escape closes after clicking a size chip", async ({ page }) => {
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  await page.keyboard.press("Enter");
+  await expect(hero).toHaveAttribute("data-selected", "0");
+  await page.getByTestId("overlay").getByRole("button", { name: "46ml" }).click();
+  await page.keyboard.press("Escape");
+  await expect(hero).toHaveAttribute("data-selected", "");
 });
 
 test("back button closes product view", async ({ page }) => {

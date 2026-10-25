@@ -21,7 +21,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  return { title: dict[lang].brand, description: dict[lang].footer };
+  return {
+    title: dict[lang].brand,
+    description: dict[lang].description,
+    // ponytail: remove when owner copy replaces [placeholder]
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function LangLayout({
