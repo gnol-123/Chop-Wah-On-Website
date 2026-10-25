@@ -29,7 +29,7 @@ Round 1 is the landing page only, live on Railway. Ordering, payment and the tra
 
 ## Experience
 
-There are three states. The mockup is `.superpowers/brainstorm/*/content/hero-flow.html`. Its colours are placeholders; the scene is sky and water.
+There are three states. The mockup is `.superpowers/brainstorm/*/content/hero-flow.html`. Its colours are placeholders (see "Look"); the scene is sky and water.
 
 1. **Ring.** The camera sits at the centre, at eye height above the pedestals, and only turns left and right. Dragging (mouse) or swiping (touch) turns the view. Products sit on pedestals spaced evenly around the ring, standing in calm water under a sky. With two products, they face each other across the ring.
 2. **Facing.** When a product is roughly centred in view, its name and size chips appear under it, and a short description slides out to the side. Looking away hides them.
@@ -84,15 +84,31 @@ Repo: `C:\Users\SL\Desktop\Chop-Wah-On sales tracking\ChopWahOn-Sales-Tracking`.
 - **Orders:** the tracker's own frontend creates orders by writing to Firestore directly (`frontend/src/orders/saveOrder.ts`). The backend's `/orders` routes only hand out order numbers and send push notifications, and every route needs a Firebase staff login.
 - **What's missing:** today there's no route the website can post an order to. The ordering round needs a new server-to-server route on the tracker backend. The website would sign in to it with a shared secret or a service account, and the route would hand out the order number, write the order and notify staff. That's a change to the tracker repo, planned there.
 
+## Look (from the owner's reference post)
+
+Reference: the owner's Pchum Ben promo post on the Chop Wah On Cambodia Facebook page (5 images, saved locally during brainstorming). The site follows its look.
+
+- **Background:** a pale, misty blue-grey, sampled at `#dfeaeb` fading to `#c7d9dd`, with a soft blurred palm-leaf shadow. The sky in the scene should be hazy and pale to match: light, low-saturation blue, not a deep saturated sky.
+- **Brand blue:** `#2385b1` (deep) and `#3094bf` (lighter). Used for emphasis words, prices and buttons.
+- **Text:** dark slate grey, about `#5a6a70`, with a lighter grey for secondary text.
+- **Panels:** light and airy (white or pale, slightly translucent), not dark. This replaces the dark mockup and its gold accent.
+- **Khmer headings:** the post pairs one thin grey word with one bold blue word (ឈុត**ធំ**, ម៉ាស់**បិទមុខ**). Use the same weight and colour contrast for product names and headings. Kantumruy Pro has the weights for it (300 and 700).
+- **Logo:** a blue circle with the gold handshake (Shake Hand Brand). The owner will put the file in the repo.
+- **Not used:** the festive bunting and the "ប្រូម៉ូសិន ភ្ជុំបិណ្ឌ" badge. They're seasonal promo decorations, not the brand.
+
+**Product facts from the post:**
+- **Crocodile Oil:** Khmer name ប្រេងក្រពើ, sizes 25ml and 46ml.
+- **Miracle Lady Cream:** Khmer name គ្រីមគុជខ្យង, sizes 3g and 30g.
+
 ## Left to the builder
 
-- Visual styling within the brief: product-focused, sky and water. The gold accent in the mockup is a placeholder.
+- Visual styling within the "Look" section above.
 - Camera easing curves and exact thresholds.
 - Panel layout on narrow screens.
 - Project file layout.
 
 ## Open (owner)
 
-- **Logo:** the logo file shown top-left in the sketch. Placeholder until it's provided.
+- **Logo:** the owner will put the logo file in the repo.
 - **Copy:** final Khmer and English text for both products.
 - **Brands:** whether the site covers CWO, CWO Health or both (from `HANDOFF.md`).

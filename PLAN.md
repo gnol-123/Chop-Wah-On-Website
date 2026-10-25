@@ -35,6 +35,12 @@ We build the site in nine steps, and each one ends with a commit.
 - **Copy:** placeholder text is marked with a leading `[placeholder]` in both locales, so the owner can grep for it.
 - **Khmer typography:** Kantumruy Pro via `next/font/google`, subsets `khmer` and `latin`. Body `line-height` at least `1.7`.
 - **No database, auth or Supabase** this round.
+- **Palette** (Tailwind theme tokens in the global CSS, from the spec's "Look" section):
+  - `mist` `#dfeaeb`, `mist-deep` `#c7d9dd`
+  - `brand` `#2385b1`, `brand-light` `#3094bf`
+  - `ink` `#5a6a70`, `ink-soft` `#8a9aa0`
+  - Panels are white or pale and translucent, never dark. No gold accent.
+- **Heading style:** thin grey word plus bold blue word, using Kantumruy Pro 300 (`ink`) and 700 (`brand`).
 - **Scene constants** (in `src/scene/ring.ts`): `RING_RADIUS = 3`, `PEDESTAL_TOP = 0.9`, `EYE_HEIGHT = 1.3`, `FACING_THRESHOLD = 0.35` (radians), `TAP_SLOP_PX = 6`. Tune values in Task 8 only.
 - **Model extensions:** the GLBs need `EXT_texture_webp`, `KHR_materials_transmission`, `KHR_materials_volume` and `KHR_materials_ior`. Load them with drei `useGLTF` (meshopt decoder on).
 
@@ -112,7 +118,8 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
   - The layout sets `<html lang={lang}>`, applies Kantumruy Pro, and wraps everything in the tRPC provider, `Header` and `Footer`.
   - `LangSwitch` is a client component. It swaps the first path segment using `usePathname`. Labels are `ខ្មែរ` and `EN`, and it marks the current one with `aria-current`.
   - `Header` shows the logo top-left and `LangSwitch` top-right.
-  - Copy `logo.png` from `C:\Users\SL\Desktop\Chop-Wah-On sales tracking\ChopWahOn-Sales-Tracking\frontend\public\logo.png`. It's the team's existing logo and stands in until the owner supplies a site logo.
+  - **Logo:** the owner is adding the company logo (blue circle with the gold handshake) to the repo root. Move it to `public/logo.<ext>`. If it isn't there yet, ask the controller rather than guessing.
+  - **Palette:** register the palette tokens and set the page background to a `mist` → `mist-deep` gradient.
 - [ ] **Step 4: Run the tests again.** `pnpm e2e`. Expected: 4 tests pass.
 - [ ] **Step 5: Commit.** `feat: km/en routes, Khmer font, header and footer`
 
@@ -138,7 +145,8 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
     id: string;                       // "crocodile-oil", "miracle-lady"
     model: { high: string; low: string }; // public URLs, e.g. "/models/crocodile-oil-46ml.glb"
     displayScale: number;             // crocodile 4, miracle-lady 6 (starting values; models are ~13 cm and ~5 cm tall)
-    sizes: string[];                  // crocodile ["25ml", "46ml"], miracle-lady ["[placeholder]"]
+    sizes: string[];                  // crocodile ["25ml", "46ml"], miracle-lady ["3g", "30g"]
+    // km names (real, from the owner's promo): crocodile "ប្រេងក្រពើ", miracle-lady "គ្រីមគុជខ្យង"; en names "Crocodile Oil", "Miracle Lady Cream". Descriptions stay [placeholder].
     text: Record<Locale, ProductText>;
   };
   export const products: Product[];   // array order = ring order
@@ -233,7 +241,7 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
 - [ ] **Step 1: Install the 3D libraries.** `pnpm add three @react-three/fiber @react-three/drei` and `pnpm add -D @types/three`. Download `examples/textures/waternormals.jpg` from the three.js GitHub repo, at the tag matching the installed `three` version, into `public/textures/` (MIT licence).
 - [ ] **Step 2: Build `Showroom`.**
   - **Canvas:** `dpr` capped at `[1, 2]` on `high` and `[1, 1.25]` on `low`. Camera fov 50 at `[0, EYE_HEIGHT, 0]`.
-  - **Sky:** a visible drei `<Sky sunPosition={SUN} />`, plus `<Environment resolution={tier === "high" ? 256 : 64} frames={1}>` containing the same `<Sky>`, so products reflect it.
+  - **Sky:** a visible drei `<Sky sunPosition={SUN} />`, tuned hazy and pale to match the `mist` palette (high `turbidity`, low `rayleigh`, the sun fairly high, and fog in `mist` toward the horizon), plus `<Environment resolution={tier === "high" ? 256 : 64} frames={1}>` containing the same `<Sky>`, so products reflect it.
   - **Ground:** `<Water tier>`.
   - **Products:** for each product at `slotPosition(i, n)`, a `<Pedestal>` with its top at `PEDESTAL_TOP` (rising from below the water), and `<ProductModel>` sitting on it.
   - **Suspense:** wrap only the product models in `<Suspense>`, so the world shows before the models finish loading.
@@ -329,6 +337,9 @@ These are the failure modes most likely to bite a phone visitor that no unit tes
   - `model load failure shows product list`: with `page.route("**/*.glb", r => r.abort())`, `getByTestId("product-list")` gets `data-visible="true"` and contains both product names.
 - [ ] **Step 2: Run them to see them fail.** `pnpm e2e`. Expected: the new tests fail.
 - [ ] **Step 3: Implement it.** Use only Tailwind; no new UI libraries.
+  - **Panels:** light translucent panels with `backdrop-blur`.
+  - **Name:** product names follow the thin-grey plus bold-blue heading style (for example ប្រេង**ក្រពើ**). Store the split as `name` plus an optional `nameEmphasis` suffix in `ProductText`, and update Task 3's type and test.
+  - **Chips and button:** size chips are outlined in `brand`, and the selected chip is filled `brand`. The order button is `brand` filled.
 - [ ] **Step 4: Run the tests again.** `pnpm e2e`. Expected: all pass.
 - [ ] **Step 5: Commit.** `feat: product cards, focus panel, fallback list and loader`
 
