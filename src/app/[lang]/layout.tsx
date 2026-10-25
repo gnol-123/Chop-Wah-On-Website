@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
-import { dict, isLocale, locales } from "~/i18n";
+import { dict, isLocale } from "~/i18n";
 import { TRPCReactProvider } from "~/trpc/react";
 
 const kantumruy = Kantumruy_Pro({
@@ -14,10 +14,6 @@ const kantumruy = Kantumruy_Pro({
   weight: ["300", "400", "700"],
   variable: "--font-kantumruy",
 });
-
-export function generateStaticParams() {
-  return locales.map((lang) => ({ lang }));
-}
 
 export async function generateMetadata({
   params,

@@ -8,6 +8,19 @@
   --color-brand-light: #3094bf;
   --color-ink: #5a6a70;
   --color-ink-soft: #8a9aa0;
+  --text-xs--line-height: 1.7;
+  --text-sm--line-height: 1.7;
+  --text-base--line-height: 1.7;
+  --text-lg--line-height: 1.7;
+  --text-xl--line-height: 1.7;
+  --text-2xl--line-height: 1.7;
+  --text-3xl--line-height: 1.7;
+  --text-4xl--line-height: 1.7;
+  --text-5xl--line-height: 1.7;
+  --text-6xl--line-height: 1.7;
+  --text-7xl--line-height: 1.7;
+  --text-8xl--line-height: 1.7;
+  --text-9xl--line-height: 1.7;
 }
 
 body {
