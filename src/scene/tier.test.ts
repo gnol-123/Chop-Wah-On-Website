@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickTier, readTierInput } from "./tier";
+import { gpuTierFromResult, pickTier, readTierInput } from "./tier";
 
 describe("pickTier", () => {
   it("defaults to high", () => expect(pickTier({ isIOS: false })).toBe("high"));
@@ -40,4 +40,16 @@ describe("readTierInput", () => {
     const nav = { userAgent: "Android", platform: "Linux", maxTouchPoints: 5 } as unknown as Navigator;
     expect(readTierInput(nav, undefined).isIOS).toBe(false);
   });
+});
+
+describe("gpuTierFromResult", () => {
+  it.each([
+    [{ tier: 2, type: "BENCHMARK" }, 2],
+    [{ tier: 1, type: "FALLBACK" }, undefined],
+    [{ tier: 0, type: "SSR" }, undefined],
+    [{ tier: 0, type: "BLOCKLISTED" }, 0],
+    [{ tier: 0, type: "WEBGL_UNSUPPORTED" }, 0],
+  ])("%o -> %s", (r, want) => expect(gpuTierFromResult(r)).toBe(want));
+  it("a CDN failure doesn't force low", () =>
+    expect(pickTier({ isIOS: false, gpuTier: gpuTierFromResult({ tier: 1, type: "FALLBACK" }) })).toBe("high"));
 });

@@ -7,7 +7,7 @@ import { Component, Suspense, useCallback, useEffect, useRef, useState, type Rea
 import { type Locale } from "~/i18n";
 import { products } from "~/products";
 import { RingControls } from "./RingControls";
-import { pickTier, readTierInput, type Tier } from "./tier";
+import { gpuTierFromResult, pickTier, readTierInput, type Tier } from "./tier";
 
 const Showroom = dynamic(() => import("./Showroom"), { ssr: false });
 
@@ -26,9 +26,9 @@ class Catch extends Component<{ onError: () => void; children: ReactNode }, { fa
   }
 }
 
-function GpuProbe({ onTier }: { onTier: (gpuTier: number) => void }) {
-  const { tier } = useDetectGPU();
-  useEffect(() => onTier(tier), [tier, onTier]);
+function GpuProbe({ onTier }: { onTier: (gpuTier: number | undefined) => void }) {
+  const gpu = useDetectGPU();
+  useEffect(() => onTier(gpuTierFromResult(gpu)), [gpu, onTier]);
   return null;
 }
 

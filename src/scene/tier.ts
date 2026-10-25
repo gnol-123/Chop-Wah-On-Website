@@ -41,3 +41,13 @@ export function readTierInput(nav: Navigator, gpuTier: number | undefined): Tier
       (n.platform === "MacIntel" && n.maxTouchPoints > 1),
   };
 }
+
+/**
+ * detect-gpu result → gpuTier for pickTier. FALLBACK (benchmark CDN failed, or GPU not in the list)
+ * and SSR mean "unknown", not "weak". Blocklisted or no WebGL is weak.
+ */
+export function gpuTierFromResult(r: { tier: number; type: string }): number | undefined {
+  if (r.type === "BENCHMARK") return r.tier;
+  if (r.type === "BLOCKLISTED" || r.type === "WEBGL_UNSUPPORTED") return 0;
+  return undefined;
+}
