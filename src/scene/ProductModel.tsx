@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { Box3, Mesh, MeshPhysicalMaterial, Vector3 } from "three";
 
 import { type Product } from "~/products";
-import { Pedestal } from "./Pedestal";
-import { PEDESTAL_TOP, isTap, slotHeading, slotPosition } from "./ring";
+import { Base } from "./Base";
+import { BASE_TOP, isTap, slotHeading, slotPosition } from "./ring";
 import { type Tier } from "./tier";
 
 type Props = {
@@ -16,10 +16,10 @@ type Props = {
   onTap?: (index: number) => void;
 };
 
-/** Pedestal cap radius over the product's footprint radius. */
-const PEDESTAL_MARGIN = 1.12;
+/** Base radius over the product's footprint radius. */
+const BASE_MARGIN = 1.12;
 
-/** One product standing on its pedestal, turned to face the centre of the ring. */
+/** One product standing on its base, turned to face the centre of the ring. */
 export function ProductModel({ product, tier, index, count, onTap }: Props) {
   // No Draco (the models don't use it); meshopt on for the .low.glb files.
   const { scene } = useGLTF(tier === "high" ? product.model.high : product.model.low, false, true);
@@ -29,7 +29,9 @@ export function ProductModel({ product, tier, index, count, onTap }: Props) {
     // three.js scales volume thickness with the model but not the attenuation distance, so at
     // displayScale the glass would tint as if s times thicker (the jar goes cyan). Scale both.
     m.traverse((o) => {
-      if (!(o instanceof Mesh) || !(o.material instanceof MeshPhysicalMaterial)) return;
+      if (!(o instanceof Mesh)) return;
+      o.castShadow = true;
+      if (!(o.material instanceof MeshPhysicalMaterial)) return;
       if (!o.material.transmission || !Number.isFinite(o.material.attenuationDistance)) return;
       o.material = o.material.clone();
       o.material.attenuationDistance *= s;
@@ -41,10 +43,10 @@ export function ProductModel({ product, tier, index, count, onTap }: Props) {
 
   return (
     <>
-      <Pedestal position={[x, 0, z]} top={PEDESTAL_TOP} radius={footprint * PEDESTAL_MARGIN} />
+      <Base position={[x, 0, z]} radius={footprint * BASE_MARGIN} />
       <group
         name={`product-${index}`}
-        position={[x, PEDESTAL_TOP, z]}
+        position={[x, BASE_TOP, z]}
         // Model fronts face +Z; turn by -heading so they face the origin.
         rotation={[0, -slotHeading(index, count), 0]}
         scale={s}

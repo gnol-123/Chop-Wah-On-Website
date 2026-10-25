@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  BASE_TOP,
+  EYE_HEIGHT,
   azimuthFromHeading,
   facedIndex,
   headingFromAzimuth,
@@ -49,5 +51,10 @@ describe("ring", () => {
   it("isTap", () => {
     expect(isTap(5)).toBe(true);
     expect(isTap(6)).toBe(false);
+  });
+  it("products sit low and the eye sees over them", () => {
+    expect(BASE_TOP).toBeGreaterThan(0);
+    expect(BASE_TOP).toBeLessThan(0.15);
+    expect(EYE_HEIGHT).toBeLessThan(1);
   });
 });

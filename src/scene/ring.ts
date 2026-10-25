@@ -1,7 +1,7 @@
 // Heading h => view direction (sin h, 0, -cos h). Slot 0 sits at h = 0.
 export const RING_RADIUS = 3;
-export const PEDESTAL_TOP = 0.9;
-export const EYE_HEIGHT = 1.3;
+export const BASE_TOP = 0.06;
+export const EYE_HEIGHT = 0.75;
 export const FACING_THRESHOLD = 0.2;
 export const TAP_SLOP_PX = 6;
 

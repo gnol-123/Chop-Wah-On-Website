@@ -5,7 +5,7 @@ import { Box3, MathUtils, Spherical, Vector3 } from "three";
 
 import {
   EYE_HEIGHT,
-  PEDESTAL_TOP,
+  BASE_TOP,
   azimuthFromHeading,
   facedIndex,
   headingFromAzimuth,
@@ -118,7 +118,7 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     const box = obj ? new Box3().setFromObject(obj) : null;
     if (box && !box.isEmpty()) box.getCenter(target);
     // Model still loading: aim at the pedestal top instead.
-    else target.set(...slotPosition(selected, count)).setY(PEDESTAL_TOP + 0.15);
+    else target.set(...slotPosition(selected, count)).setY(BASE_TOP + 0.3);
     // ponytail: target fixed at fly-in; a model that finishes loading mid-focus isn't re-aimed.
     const back = new Vector3(-target.x, 0, -target.z).normalize().multiplyScalar(FOCUS_BACK);
     flyTo(c, target.clone().add(back).setY(target.y + FOCUS_UP), target, anim);

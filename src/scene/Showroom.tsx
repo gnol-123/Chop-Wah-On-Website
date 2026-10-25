@@ -43,6 +43,7 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
   return (
     <>
       <Canvas
+        shadows={!effectsLow}
         dpr={effectsLow ? [1, 1.25] : [1, 2]}
         // Below 1 so label whites and highlights hold. The sky skips tone mapping, so this only moves the lit world.
         gl={{ toneMappingExposure: 0.8 }}
@@ -53,7 +54,22 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
         <Environment resolution={tier === "high" ? 256 : 64} frames={1}>
           <SkyDome sun={SUN} />
         </Environment>
-        <directionalLight position={SUN} intensity={1} color="#fff3e2" />
+        <directionalLight
+          position={SUN}
+          intensity={1}
+          color="#fff3e2"
+          castShadow
+          shadow-mapSize={[1024, 1024]}
+          shadow-camera-left={-4.5}
+          shadow-camera-right={4.5}
+          shadow-camera-top={4.5}
+          shadow-camera-bottom={-4.5}
+          shadow-camera-near={0.5}
+          shadow-camera-far={20}
+          shadow-bias={-0.0005}
+          shadow-normalBias={0.02}
+          shadow-radius={4}
+        />
         <Water tier={effectsLow ? "low" : "high"} sun={SUN} />
         <Suspense fallback={null}>
           {products.map((p, i) => (
