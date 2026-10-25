@@ -30,6 +30,8 @@ We do it in six steps, each ending with a commit (step 4 happens in the 3D works
 5. **Jar on the site.** Copy it in, make the phone version, re-check its size next to the bottle, and check its colours under the new sky.
 6. **Check and tune.** Look at it on phone and desktop sizes, both quality levels, tune by eye, and update the design doc.
 
+Mid-build the owner added: let people turn freely instead of snapping to every product. Near a product there's a very gentle magnet that settles onto it. When it settles, the view zooms in very slightly and floating text appears: the product's name above it in a stylised heading, with descriptions to each side. That changes step 3's pop-up into that layout, and adds a step 3b (Task 7 below) for the turning and zoom, done right after step 3.
+
 Not doing: the handoff's optional Part C (porting the jar's ray tracer into the scene). It's a big job, heavy on phones, and the new GLB fixes the reported problems. Revisit if the GLB still doesn't read as thick acrylic.
 
 ## Global Constraints
@@ -265,6 +267,93 @@ Run: `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm e2e`. Expected: all pass, i
 ```bash
 git add src tests
 git commit -m "feat: pop-up callout beside the faced product"
+```
+
+---
+
+> **Owner change to Task 3 (mid-build):** the single callout became three elements: a stylised floating name above the product (`data-testid="callout"`, the tap target, `animate-pop`), the `short` text on the left (`callout-left`) and a new `ProductText.detail` placeholder on the right (`callout-right`). Size chips left the label. On phones the two descriptions sit below the product. Tests updated to match.
+
+---
+
+### Task 7: Free turning, gentle magnet, slight zoom on face
+
+**Model:** sonnet. **Runs after Task 3, before Task 5.**
+
+**Files:**
+- Modify: `src/scene/ring.ts`, `src/scene/ring.test.ts`, `src/scene/RingControls.tsx`, `tests/e2e/smoke.spec.ts`
+
+**Interfaces:**
+- Consumes: `facedIndex`, `snapHeading`, `FACING_THRESHOLD` (0.2) from `ring.ts`; Hero's `onFaced`.
+- Produces in `ring.ts`:
+  - `MAGNET = 0.25` (radians) and `magnetHeading(heading: number, count: number, radius = MAGNET): number | null`: the nearest slot's heading (same branch of turns as `heading`, like `snapHeading`) when within `radius`, else `null`.
+  - `facedIndex(heading, count, threshold = FACING_THRESHOLD, prev: number | null = null)`: hysteresis. A product becomes faced inside `threshold`; the previously faced `prev` stays faced until it's outside `threshold * FACING_EXIT` (`FACING_EXIT = 1.3`).
+  - `FACE_ZOOM = 1.08`.
+
+- [ ] **Step 1: Write the failing unit tests** in `ring.test.ts`:
+
+```ts
+test("magnet catches only near a slot", () => {
+  expect(magnetHeading(0.1, 2)).toBeCloseTo(0);
+  expect(magnetHeading(Math.PI - 0.2, 2)).toBeCloseTo(Math.PI);
+  expect(magnetHeading(0.6, 2)).toBeNull();
+  expect(magnetHeading(2 * Math.PI + 0.1, 2)).toBeCloseTo(2 * Math.PI);
+});
+
+test("faced has hysteresis", () => {
+  expect(facedIndex(0.22, 2)).toBeNull();          // not yet faced
+  expect(facedIndex(0.22, 2, FACING_THRESHOLD, 0)).toBe(0); // stays faced
+  expect(facedIndex(0.3, 2, FACING_THRESHOLD, 0)).toBeNull(); // past exit
+});
+```
+
+- [ ] **Step 2: Run, expect FAIL** (`magnetHeading` not exported). `pnpm test src/scene/ring.test.ts`
+- [ ] **Step 3: Implement** the three exports; run `pnpm test`, expect PASS (existing `facedIndex` tests still pass).
+- [ ] **Step 4: Write the failing e2e tests** (canvas drag; with `azimuthRotateSpeed -0.4` at 1280×720, ~172 px ≈ 0.6 rad and ~29 px ≈ 0.1 rad):
+
+```ts
+async function drag(page: Page, dx: number) {
+  const box = (await page.locator("canvas").boundingBox())!;
+  const y = box.y + box.height / 2, x = box.x + box.width / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y, { steps: 10 });
+  await page.mouse.up();
+}
+
+test("turning stops where you let go, away from products", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  await drag(page, 172);
+  await page.waitForTimeout(1500);
+  await expect(hero).toHaveAttribute("data-faced", "");
+});
+
+test("letting go near a product settles onto it", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  await drag(page, 29);
+  await expect(hero).toHaveAttribute("data-faced", "0");
+});
+```
+
+- [ ] **Step 5: Run, expect the first to FAIL** (today it snaps back to product 0). `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm e2e -g "let go"`
+- [ ] **Step 6: Implement in `RingControls.tsx`**:
+  - `snap()` uses `magnetHeading`; `null` means leave the camera where it is.
+  - The magnet eases gently (a softer, slower transition than drag smoothing, e.g. `smoothTime` ~0.6 s while settling) so it feels like a pull, not a snap. Reduced motion: cut.
+  - Pass the last faced index as `prev` to `facedIndex`.
+  - Zoom: when a product becomes faced (ring mode), `zoomTo(FACE_ZOOM, anim)`; when it stops being faced, `zoomTo(1, anim)`; on select, `zoomTo(1)` before the fly-in.
+  - Arrow keys still step product to product (unchanged).
+- [ ] **Step 7: Run all e2e, expect PASS.** `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm e2e`
+- [ ] **Step 8: Verify by eye:** drag slowly past a product: the label pops in with a slight zoom as you pass, then leaves; let go just off a product: it drifts gently onto it.
+- [ ] **Step 9: Checks and commit.** `pnpm lint && pnpm typecheck && pnpm test`
+
+```bash
+git add src/scene tests
+git commit -m "feat: free turning with a gentle magnet and slight zoom on face"
 ```
 
 ---
