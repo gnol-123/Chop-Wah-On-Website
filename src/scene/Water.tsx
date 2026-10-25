@@ -7,7 +7,7 @@ import { type Tier } from "./tier";
 
 type Sun = [number, number, number];
 const SIZE = 2000;
-const TINT = "#7fa6ab";
+const TINT = "#3f7894";
 
 /** Calm water at y = 0. `high` is a mirror with moving normals; `low` a tinted reflective plane. */
 export function Water({ tier, sun }: { tier: Tier; sun: Sun }) {
@@ -24,7 +24,7 @@ function MirrorWater({ sun }: { sun: Sun }) {
       textureHeight: 512,
       waterNormals: normals,
       sunDirection: new Vector3(...sun).normalize(),
-      sunColor: 0xffffff,
+      sunColor: 0xfff3e2,
       waterColor: TINT,
       distortionScale: 0.3,
       fog: true,
