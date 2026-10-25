@@ -4,6 +4,7 @@ import { Environment, Loader, PerformanceMonitor } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState, type ComponentProps, type ReactNode } from "react";
 
+import { type Locale } from "~/i18n";
 import { type Product } from "~/products";
 import { ProductModel } from "./ProductModel";
 import { EYE_HEIGHT } from "./ring";
@@ -15,6 +16,9 @@ import { Water } from "./Water";
 export type ShowroomProps = {
   products: Product[];
   tier: Tier;
+  lang: Locale;
+  faced: number | null;
+  selected: number | null;
   onTap?: (index: number) => void;
   controls: ComponentProps<typeof RingControls>;
   loadingText: string;
@@ -38,7 +42,7 @@ function After({ ms, children }: { ms: number; children: ReactNode }) {
   return on ? children : null;
 }
 
-export default function Showroom({ products, tier, onTap, controls, loadingText }: ShowroomProps) {
+export default function Showroom({ products, tier, lang, faced, selected, onTap, controls, loadingText }: ShowroomProps) {
   const [declined, setDeclined] = useState(false);
   const effectsLow = tier === "low" || declined;
   const n = products.length;
@@ -76,7 +80,13 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
         <Water tier={effectsLow ? "low" : "high"} sun={SUN} />
         <Suspense fallback={null}>
           {products.map((p, i) => (
-            <ProductModel key={p.id} product={p} tier={tier} index={i} count={n} onTap={onTap} />
+            <ProductModel key={p.id} product={p} tier={tier} index={i}
+              count={n}
+              lang={lang}
+              faced={faced}
+              selected={selected}
+              onTap={onTap}
+            />
           ))}
           {/* Not until the models are in and their textures and shaders are on the GPU: that
               first-frame stall isn't a slow device. */}

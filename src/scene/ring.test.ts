@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   BASE_TOP,
   EYE_HEIGHT,
+  RING_RADIUS,
   azimuthFromHeading,
+  calloutAnchor,
   facedIndex,
   headingFromAzimuth,
   isTap,
@@ -56,5 +58,14 @@ describe("ring", () => {
     expect(BASE_TOP).toBeGreaterThan(0);
     expect(BASE_TOP).toBeLessThan(0.15);
     expect(EYE_HEIGHT).toBeLessThan(1);
+  });
+  it("calloutAnchor sits to the viewer's right of the slot", () => {
+    const [x, y, z] = calloutAnchor(0, 2, 0.5, 1);
+    expect(x).toBeCloseTo(0.5);
+    expect(y).toBeCloseTo(BASE_TOP + 1);
+    expect(z).toBeCloseTo(-RING_RADIUS);
+    const q = calloutAnchor(1, 4, 0.5, 0);
+    expect(q[0]).toBeCloseTo(RING_RADIUS);
+    expect(q[2]).toBeCloseTo(0.5);
   });
 });

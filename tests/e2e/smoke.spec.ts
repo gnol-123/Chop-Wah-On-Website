@@ -43,7 +43,7 @@ test("arrow turns to next product", async ({ page }) => {
   const hero = page.getByTestId("hero");
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
   await page.keyboard.press("ArrowRight");
-  await expect(hero).toHaveAttribute("data-faced", "1");
+  await expect(hero).toHaveAttribute("data-faced", "1", LOAD);
 });
 
 test("enter opens and escape closes", async ({ page }) => {
@@ -94,15 +94,60 @@ test("reduced motion disables transitions", async ({ page }) => {
 const names = { km: products[0]!.text.km, en: products[0]!.text.en };
 
 for (const lang of ["km", "en"] as const) {
-  test(`facing card shows product name (${lang})`, async ({ page }) => {
+  test(`callout shows product name and text (${lang})`, async ({ page }) => {
     await page.goto(`/${lang}`);
-    await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+    const hero = page.getByTestId("hero");
+    await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
     // Scoped: the sr-only list also holds the names, and 1px elements count as visible.
-    const overlay = page.getByTestId("overlay");
-    await expect(overlay.getByText(names[lang].name, { exact: false }).first()).toBeVisible();
-    await expect(overlay.getByText(names[lang].short)).toBeVisible();
+    await expect(hero.getByText(names[lang].name, { exact: false }).first()).toBeVisible();
+    await expect(hero.getByText(names[lang].short)).toBeVisible(LOAD);
   });
 }
+
+test("callout follows the faced product", async ({ page }) => {
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  const callout = page.getByTestId("callout");
+  const left = page.getByTestId("callout-left");
+  await expect(callout).toHaveCount(1, LOAD);
+  await expect(left).toContainText(products[0]!.text.en.short);
+  await page.keyboard.press("ArrowRight");
+  await expect(hero).toHaveAttribute("data-faced", "1", LOAD);
+  await expect(left).toContainText(products[1]!.text.en.short, LOAD);
+  await page.keyboard.press("Enter");
+  await expect(hero).toHaveAttribute("data-selected", "1");
+  await expect(callout).toHaveCount(0);
+});
+
+test("tapping callout opens product", async ({ page }) => {
+  await page.goto("/en");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+  await page.getByTestId("callout").click();
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-selected", "0");
+});
+
+test("callout fits at 360px in km", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto("/km");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+  const header = (await page.locator("header").boundingBox())!;
+  for (const id of ["callout", "callout-left", "callout-right"]) {
+    const box = (await page.getByTestId(id).boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(360);
+    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(box.y + box.height).toBeLessThanOrEqual(740);
+  }
+});
+
+test("callout does not animate with reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/en");
+  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
+  const name = await page.getByTestId("callout").evaluate((e) => getComputedStyle(e).animationName);
+  expect(name).toBe("none");
+});
 
 test("focus panel has sizes and disabled order", async ({ page }) => {
   await page.goto("/en");

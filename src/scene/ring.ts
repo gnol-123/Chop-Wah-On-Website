@@ -26,6 +26,18 @@ export function slotPosition(
   return [radius * Math.sin(h), 0, -radius * Math.cos(h)];
 }
 
+/** Point `offset` m to the viewer's right of a slot (viewer at the origin facing it), `height` m above the base top. */
+export function calloutAnchor(
+  index: number,
+  count: number,
+  offset: number,
+  height: number,
+): [number, number, number] {
+  const h = slotHeading(index, count);
+  const [x, , z] = slotPosition(index, count);
+  return [x + offset * Math.cos(h), BASE_TOP + height, z + offset * Math.sin(h)];
+}
+
 export function facedIndex(
   heading: number,
   count: number,

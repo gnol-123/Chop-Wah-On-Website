@@ -31,6 +31,34 @@ body {
 }
 
 @theme {
+  --animate-pop: pop 0.3s ease-out both;
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.9);
+    }
+  }
+  --animate-emerge-left: emerge-left 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s both;
+  --animate-emerge-right: emerge-right 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s both;
+  --animate-emerge-down: emerge-down 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s both;
+  @keyframes emerge-left {
+    from {
+      opacity: 0;
+      transform: translateX(70%) scale(0.8);
+    }
+  }
+  @keyframes emerge-right {
+    from {
+      opacity: 0;
+      transform: translateX(-70%) scale(0.8);
+    }
+  }
+  @keyframes emerge-down {
+    from {
+      opacity: 0;
+      transform: translateY(-60%) scale(0.8);
+    }
+  }
   --animate-slide-in: slide-in 0.35s ease-out both;
   @keyframes slide-in {
     from {
@@ -41,6 +69,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-emerge-left,
+  .animate-emerge-right,
+  .animate-emerge-down,
   .animate-slide-in {
     animation: none;
   }
