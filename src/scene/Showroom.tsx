@@ -56,7 +56,7 @@ export default function Showroom({ products, tier, lang, faced, selected, onTap,
         gl={{ toneMappingExposure: 0.8 }}
         camera={{ fov: 50, position: [0, EYE_HEIGHT, 0], rotation: [0, 0, 0], near: 0.05, far: 2000 }}
       >
-        <fog attach="fog" args={[HORIZON, 30, 180]} />
+        <fog attach="fog" args={[HORIZON, 20, 120]} />
         <SkyDome sun={SUN} />
         <Environment resolution={tier === "high" ? 256 : 64} frames={1}>
           <SkyDome sun={SUN} />
@@ -64,7 +64,7 @@ export default function Showroom({ products, tier, lang, faced, selected, onTap,
         <directionalLight
           position={SUN_POS}
           intensity={1}
-          color="#fff3e2"
+          color="#ffeedc"
           castShadow
           shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-4.5}

@@ -47,7 +47,7 @@ export function Callout({ product, lang, index, count, footprint, height, onOpen
             type="button"
             data-testid="callout"
             onClick={onOpen}
-            className="animate-pop block w-[min(20rem,90vw)] text-center text-3xl tracking-widest [overflow-wrap:anywhere] [text-shadow:0_0_10px_#fff] md:w-[28rem] md:text-5xl"
+            className="animate-pop block w-[min(20rem,90vw)] text-center text-3xl tracking-widest [overflow-wrap:anywhere] [text-shadow:0_0_10px_#fff] md:w-[40rem] md:text-5xl"
           >
             <ProductName t={t} />
           </button>

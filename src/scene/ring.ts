@@ -8,7 +8,7 @@ export const FACING_EXIT = 1.3;
 /** Letting go within this many radians of a slot pulls the view onto it: every heading still counted as faced. */
 export const MAGNET = FACING_THRESHOLD * FACING_EXIT;
 /** Camera zoom while a product is faced. */
-export const FACE_ZOOM = 1.08;
+export const FACE_ZOOM = 1.12;
 export const TAP_SLOP_PX = 6;
 
 const TAU = 2 * Math.PI;
