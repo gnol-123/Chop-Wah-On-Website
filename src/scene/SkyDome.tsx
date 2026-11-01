@@ -42,7 +42,7 @@ const fragmentShader = /* glsl */ `
   float fbm(vec2 p) {
     float v = 0.0, a = 0.5;
     mat2 r = mat2(1.6, 1.2, -1.2, 1.6);
-    for (int i = 0; i < 6; i++) { v += a * noise(p); p = r * p; a *= 0.5; }
+    for (int i = 0; i < OCTAVES; i++) { v += a * noise(p); p = r * p; a *= 0.5; }
     return v;
   }
   // Cloud thickness (0..1) on the plane above the viewer.
@@ -60,12 +60,16 @@ const fragmentShader = /* glsl */ `
     // Thin pale band at the horizon, clear blue by ~20 degrees up.
     vec3 col = mix(horizon, zenith, 1.0 - pow(1.0 - y, 5.0));
 
-    // Clouds: project onto a plane, drift with time, fade out under ~3 degrees.
-    if (d.y > 0.04) {
+    // Clouds: project onto a plane, drift with time, fade out under ~3 degrees (alpha is 0 below 0.05).
+    if (d.y > 0.05) {
       vec2 p = d.xz / d.y * 0.6 + vec2(time * 0.006, time * 0.002);
       float t = clouds(p);
       // Thick bellies go lavender-grey; the side facing the sun catches light.
-      float toSun = t - clouds(p + normalize(sunDir.xz + 1e-4) * 0.08);
+      #ifdef LOW
+        float toSun = 0.0; // no second cloud lookup: thickness shading only
+      #else
+        float toSun = t - clouds(p + normalize(sunDir.xz + 1e-4) * 0.08);
+      #endif
       float lit = clamp(1.0 - 0.9 * smoothstep(0.15, 0.9, t) + 3.0 * toSun, 0.0, 1.0);
       vec3 cloud = mix(cloudShade, cloudLit, lit);
       float a = smoothstep(0.0, 0.3, t) * smoothstep(0.05, 0.2, d.y);
@@ -90,8 +94,9 @@ const fragmentShader = /* glsl */ `
 /**
  * Painted sky: blue gradient, soft sun glow, drifting clouds. Drawn first and untouched by
  * tone mapping, so its horizon on screen is exactly HORIZON. R3F disposes geometry and material.
+ * `low`: fewer noise octaves and no sun-side cloud shading, for the low tier.
  */
-export function SkyDome({ sun }: { sun: [number, number, number] }) {
+export function SkyDome({ sun, low = false }: { sun: [number, number, number]; low?: boolean }) {
   const uniforms = useMemo(
     () => ({
       zenith: { value: new Color(ZENITH) },
@@ -114,6 +119,9 @@ export function SkyDome({ sun }: { sun: [number, number, number] }) {
     <mesh renderOrder={-1} frustumCulled={false}>
       <sphereGeometry args={[400, 48, 24]} />
       <shaderMaterial
+        // Keyed: defines only take effect on a fresh compile.
+        key={String(low)}
+        defines={low ? { OCTAVES: 3, LOW: 1 } : { OCTAVES: 5 }}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms}

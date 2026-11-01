@@ -50,14 +50,16 @@ export default function Showroom({ products, tier, lang, faced, selected, onTap,
   return (
     <>
       <Canvas
-        shadows={!effectsLow}
+        // percentage = PCFShadowMap; r186 dropped PCFSoftShadowMap, which `true` asks for.
+        shadows={effectsLow ? false : "percentage"}
         dpr={effectsLow ? [1, 1.25] : [1, 2]}
         // Below 1 so label whites and highlights hold. The sky skips tone mapping, so this only moves the lit world.
         gl={{ toneMappingExposure: 0.8 }}
         camera={{ fov: 50, position: [0, EYE_HEIGHT, 0], rotation: [0, 0, 0], near: 0.05, far: 2000 }}
       >
         <fog attach="fog" args={[HORIZON, 20, 120]} />
-        <SkyDome sun={SUN} />
+        <SkyDome sun={SUN} low={effectsLow} />
+        {/* Rendered once: full quality is cheap here. */}
         <Environment resolution={tier === "high" ? 256 : 64} frames={1}>
           <SkyDome sun={SUN} />
         </Environment>
