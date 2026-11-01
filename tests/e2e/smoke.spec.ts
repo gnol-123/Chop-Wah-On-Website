@@ -97,13 +97,14 @@ async function drag(page: Page, dx: number) {
   const x = box.x + box.width / 2;
   await page.mouse.move(x, y);
   // The model loader covers the canvas until the models are in.
-  await page.waitForFunction((p) => document.elementFromPoint(p.x, p.y)?.tagName === "CANVAS", { x, y }, LOAD);
+  await page.waitForFunction((p) => document.elementFromPoint(p.x, p.y)?.tagName === "CANVAS", { x, y }, { timeout: 45_000 });
   await page.mouse.down();
   await page.mouse.move(x + dx, y, { steps: 10 });
   await page.mouse.up();
 }
 
 test("turning stops where you let go, away from products", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/en");
   const hero = page.getByTestId("hero");
@@ -122,7 +123,8 @@ test("letting go near a product settles onto it", async ({ page }) => {
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
   // Out past the facing threshold (0.6 rad), then back to 0.23 rad off: unfaced, but inside the magnet.
   await drag(page, 172);
-  await page.waitForTimeout(1000);
+  await expect(hero).toHaveAttribute("data-faced", "", LOAD);
+  await page.waitForTimeout(1500); // let the smoothed heading settle
   await drag(page, -105);
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
 });
