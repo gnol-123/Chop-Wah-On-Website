@@ -4,6 +4,9 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  // Headless software GL: two workers at most, and room for slow first frames.
+  workers: process.env.CI ? 1 : 2,
+  timeout: 60_000,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   use: {

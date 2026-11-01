@@ -114,7 +114,7 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
 
     c.smoothTime = reducedMotion ? 0 : SMOOTH;
     if (selected === null) {
-      void c.zoomTo(faced.current != null ? FACE_ZOOM : 1, anim);
+      void c.zoomTo(FACE_ZOOM, anim); // the return heading is always a slot
       void c.setFocalOffset(0, 0, 0, anim);
       flyTo(c, RING_EYE, ringTarget(ringHeading.current), anim);
       return;
@@ -127,7 +127,7 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     const obj = scene.getObjectByName(`product-${selected}`);
     const box = obj ? new Box3().setFromObject(obj) : null;
     if (box && !box.isEmpty()) box.getCenter(target);
-    // Model still loading: aim at the pedestal top instead.
+    // Model still loading: aim at the base top instead.
     else target.set(...slotPosition(selected, count)).setY(BASE_TOP + 0.3);
     // ponytail: target fixed at fly-in; a model that finishes loading mid-focus isn't re-aimed.
     const back = new Vector3(-target.x, 0, -target.z).normalize().multiplyScalar(FOCUS_BACK);
