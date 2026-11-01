@@ -115,11 +115,15 @@ test("turning stops where you let go, away from products", async ({ page }) => {
 });
 
 test("letting go near a product settles onto it", async ({ page }) => {
+  test.setTimeout(90_000); // two drags on a software renderer
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/en");
   const hero = page.getByTestId("hero");
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
-  await drag(page, 29);
+  // Out past the facing threshold (0.6 rad), then back to 0.23 rad off: unfaced, but inside the magnet.
+  await drag(page, 172);
+  await page.waitForTimeout(1000);
+  await drag(page, -105);
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
 });
 
