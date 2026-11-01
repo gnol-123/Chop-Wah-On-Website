@@ -13,9 +13,7 @@ const hit = "relative before:absolute before:inset-x-0 before:top-1/2 before:h-1
 
 type Props = {
   lang: Locale;
-  faced: number | null;
   selected: number | null;
-  onOpen: (i: number) => void;
   onBack: () => void;
   /** Show the drag hint (until the first drag). */
   hint?: boolean;
@@ -67,39 +65,15 @@ function Focus({ lang, index, onBack }: { lang: Locale; index: number; onBack: (
   );
 }
 
-export function Overlay({ lang, faced, selected, onOpen, onBack, hint = false }: Props) {
+export function Overlay({ lang, selected, onBack, hint = false }: Props) {
   const t = dict[lang];
-  const f = selected === null && faced !== null ? products[faced] : undefined;
   return (
     <div data-testid="overlay" className="pointer-events-none absolute inset-0 z-[5]">
       {hint && selected === null && (
-        <p className="absolute inset-x-0 top-20 px-4 text-center text-sm text-ink [overflow-wrap:anywhere]">{t.dragHint}</p>
-      )}
-      {f && faced !== null && (
-        // Keyed so the side card slides in again for each product.
-        <div key={faced} className="absolute inset-x-0 bottom-8 flex flex-col items-center gap-3 px-4">
-          <p
-            className={`${panel} animate-slide-in max-w-sm self-start rounded-2xl px-4 py-2 text-sm md:absolute md:bottom-24 md:right-10 md:self-auto`}
-          >
-            {f.text[lang].short}
-          </p>
-          <button
-            type="button"
-            onClick={() => onOpen(faced)}
-            className={`${panel} flex max-w-full flex-col items-center gap-2 rounded-3xl px-6 py-3`}
-          >
-            <span className="text-xl">
-              <ProductName t={f.text[lang]} />
-            </span>
-            <span className="flex flex-wrap justify-center gap-2">
-              {f.sizes.map((s) => (
-                <span key={s} className={`${chip} text-brand`}>
-                  {s}
-                </span>
-              ))}
-            </span>
-          </button>
-        </div>
+        // Landscape phones: up in the header row, clear of the faced product's name.
+        <p data-testid="drag-hint" className="absolute inset-x-0 top-20 px-4 text-center text-sm text-ink [overflow-wrap:anywhere] [@media(max-height:30rem)]:top-5">
+          {t.dragHint}
+        </p>
       )}
       {selected !== null && <Focus key={selected} lang={lang} index={selected} onBack={onBack} />}
     </div>

@@ -12,6 +12,7 @@ describe("products", () => {
         const t = p.text[l];
         expect(t.name).not.toBe("");
         expect(t.short).not.toBe("");
+        expect(t.detail).not.toBe("");
         expect(t.long).not.toBe("");
       }
   });

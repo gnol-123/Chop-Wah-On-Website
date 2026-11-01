@@ -1,34 +1,34 @@
 "use client";
 
-import { Environment, Loader, PerformanceMonitor, Sky } from "@react-three/drei";
+import { Environment, Loader, PerformanceMonitor } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState, type ComponentProps, type ReactNode } from "react";
 
+import { type Locale } from "~/i18n";
 import { type Product } from "~/products";
 import { ProductModel } from "./ProductModel";
 import { EYE_HEIGHT } from "./ring";
 import { RingControls } from "./RingControls";
+import { HORIZON, SkyDome } from "./SkyDome";
 import { type Tier } from "./tier";
 import { Water } from "./Water";
 
 export type ShowroomProps = {
   products: Product[];
   tier: Tier;
+  lang: Locale;
+  faced: number | null;
+  selected: number | null;
   onTap?: (index: number) => void;
   controls: ComponentProps<typeof RingControls>;
   loadingText: string;
 };
 
-/** Sun direction, shared by the sky and the water. High and off to the right. */
-export const SUN: [number, number, number] = [0.4, 0.8, -0.45];
+/** Sun direction, shared by the sky and the water. About 30° up, 30° right of slot 0. */
+export const SUN: [number, number, number] = [0.43, 0.5, -0.75];
 
-// The sky's own colour at the horizon (sampled), so the far water melts into it with no seam.
-const HAZE = "#f3f5f5";
-
-// Hazy and pale: lots of mie haze, little rayleigh blue.
-const sky = (
-  <Sky sunPosition={SUN} turbidity={12} rayleigh={0.5} mieCoefficient={0.02} mieDirectionalG={0.3} />
-);
+/** Light placed 12 m out along SUN so the shadow camera sees the whole ring. */
+const SUN_POS = SUN.map((v) => v * 12) as [number, number, number];
 
 // ponytail: fixed wait after the models mount; key it off renderer.compileAsync if slow phones still trip it.
 const SETTLE_MS = 2000;
@@ -42,7 +42,7 @@ function After({ ms, children }: { ms: number; children: ReactNode }) {
   return on ? children : null;
 }
 
-export default function Showroom({ products, tier, onTap, controls, loadingText }: ShowroomProps) {
+export default function Showroom({ products, tier, lang, faced, selected, onTap, controls, loadingText }: ShowroomProps) {
   const [declined, setDeclined] = useState(false);
   const effectsLow = tier === "low" || declined;
   const n = products.length;
@@ -50,19 +50,45 @@ export default function Showroom({ products, tier, onTap, controls, loadingText 
   return (
     <>
       <Canvas
+        // percentage = PCFShadowMap; r186 dropped PCFSoftShadowMap, which `true` asks for.
+        shadows={effectsLow ? false : "percentage"}
         dpr={effectsLow ? [1, 1.25] : [1, 2]}
+        // Below 1 so label whites and highlights hold. The sky skips tone mapping, so this only moves the lit world.
+        gl={{ toneMappingExposure: 0.8 }}
         camera={{ fov: 50, position: [0, EYE_HEIGHT, 0], rotation: [0, 0, 0], near: 0.05, far: 2000 }}
       >
-        <fog attach="fog" args={[HAZE, 5, 60]} />
-        {sky}
+        <fog attach="fog" args={[HORIZON, 20, 120]} />
+        <SkyDome sun={SUN} low={effectsLow} />
+        {/* Rendered once: full quality is cheap here. */}
         <Environment resolution={tier === "high" ? 256 : 64} frames={1}>
-          {sky}
+          <SkyDome sun={SUN} />
         </Environment>
-        <directionalLight position={SUN} intensity={1.2} />
+        <directionalLight
+          position={SUN_POS}
+          intensity={1}
+          color="#ffeedc"
+          castShadow
+          shadow-mapSize={[1024, 1024]}
+          shadow-camera-left={-4.5}
+          shadow-camera-right={4.5}
+          shadow-camera-top={4.5}
+          shadow-camera-bottom={-4.5}
+          shadow-camera-near={1}
+          shadow-camera-far={30}
+          shadow-bias={-0.0005}
+          shadow-normalBias={0.02}
+          shadow-radius={4}
+        />
         <Water tier={effectsLow ? "low" : "high"} sun={SUN} />
         <Suspense fallback={null}>
           {products.map((p, i) => (
-            <ProductModel key={p.id} product={p} tier={tier} index={i} count={n} onTap={onTap} />
+            <ProductModel key={p.id} product={p} tier={tier} index={i}
+              count={n}
+              lang={lang}
+              faced={faced}
+              selected={selected}
+              onTap={onTap}
+            />
           ))}
           {/* Not until the models are in and their textures and shaders are on the GPU: that
               first-frame stall isn't a slow device. */}

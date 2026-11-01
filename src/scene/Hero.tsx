@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Footer } from "~/components/Footer";
 import { ProductList } from "~/components/ProductList";
 import { dict, type Locale } from "~/i18n";
 import { products } from "~/products";
@@ -137,12 +136,15 @@ export function Hero({ lang }: { lang: Locale }) {
       {tier && !failed && (
         <>
           {/* Before the Showroom so its Loader (same z) covers the cards while models load. */}
-          <Overlay lang={lang} faced={faced} selected={selected} onOpen={select} onBack={back} hint={!dragged} />
+          <Overlay lang={lang} selected={selected} onBack={back} hint={!dragged} />
           <Catch onError={() => setFailed(true)}>
             <Suspense fallback={loading}>
               <Showroom
                 products={products}
                 tier={tier}
+                lang={lang}
+                faced={faced}
+                selected={selected}
                 onTap={select}
                 loadingText={dict[lang].loading}
                 controls={{
@@ -159,7 +161,6 @@ export function Hero({ lang }: { lang: Locale }) {
         </>
       )}
       <ProductList lang={lang} visible={failed} />
-      {selected === null && <Footer t={dict[lang]} />}
     </div>
   );
 }

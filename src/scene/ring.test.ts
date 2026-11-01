@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  BASE_TOP,
+  EYE_HEIGHT,
+  FACING_THRESHOLD,
+  RING_RADIUS,
   azimuthFromHeading,
+  calloutAnchor,
   facedIndex,
   headingFromAzimuth,
   isTap,
+  magnetHeading,
   slotHeading,
   slotPosition,
   snapHeading,
@@ -36,6 +42,17 @@ describe("ring", () => {
     expect(facedIndex(0, 0)).toBeNull();
     expect(facedIndex(2, 1)).toBeNull();
   });
+  it("magnet catches only near a slot", () => {
+    expect(magnetHeading(0.1, 2)).toBeCloseTo(0);
+    expect(magnetHeading(Math.PI - 0.2, 2)).toBeCloseTo(Math.PI);
+    expect(magnetHeading(0.6, 2)).toBeNull();
+    expect(magnetHeading(TAU + 0.1, 2)).toBeCloseTo(TAU);
+  });
+  it("faced has hysteresis", () => {
+    expect(facedIndex(0.22, 2)).toBeNull();
+    expect(facedIndex(0.22, 2, FACING_THRESHOLD, 0)).toBe(0);
+    expect(facedIndex(0.3, 2, FACING_THRESHOLD, 0)).toBeNull();
+  });
   it("snapHeading", () => {
     expect(snapHeading(TAU + 0.2, 2)).toBeCloseTo(TAU);
     expect(snapHeading(-0.2, 2)).toBeCloseTo(0);
@@ -49,5 +66,19 @@ describe("ring", () => {
   it("isTap", () => {
     expect(isTap(5)).toBe(true);
     expect(isTap(6)).toBe(false);
+  });
+  it("products sit low and the eye sees over them", () => {
+    expect(BASE_TOP).toBeGreaterThan(0);
+    expect(BASE_TOP).toBeLessThan(0.15);
+    expect(EYE_HEIGHT).toBeLessThan(1);
+  });
+  it("calloutAnchor sits to the viewer's right of the slot", () => {
+    const [x, y, z] = calloutAnchor(0, 2, 0.5, 1);
+    expect(x).toBeCloseTo(0.5);
+    expect(y).toBeCloseTo(BASE_TOP + 1);
+    expect(z).toBeCloseTo(-RING_RADIUS);
+    const q = calloutAnchor(1, 4, 0.5, 0);
+    expect(q[0]).toBeCloseTo(RING_RADIUS);
+    expect(q[2]).toBeCloseTo(0.5);
   });
 });

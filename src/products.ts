@@ -1,7 +1,7 @@
 import type { Locale } from "~/i18n";
 
 /** Full name is `name + nameEmphasis`; the emphasis suffix is set bold blue. */
-export type ProductText = { name: string; nameEmphasis?: string; short: string; long: string };
+export type ProductText = { name: string; nameEmphasis?: string; short: string; detail: string; long: string };
 export type Product = {
   id: string;
   model: { high: string; low: string };
@@ -11,8 +11,8 @@ export type Product = {
 };
 
 const ph = {
-  km: { short: "[placeholder] ការពិពណ៌នាខ្លី", long: "[placeholder] ការពិពណ៌នាវែង" },
-  en: { short: "[placeholder] Short description", long: "[placeholder] Long description" },
+  km: { short: "[placeholder] ការពិពណ៌នាខ្លី", detail: "[placeholder] ព័ត៌មានលម្អិត", long: "[placeholder] ការពិពណ៌នាវែង" },
+  en: { short: "[placeholder] Short description", detail: "[placeholder] Detail", long: "[placeholder] Long description" },
 };
 
 export const products: Product[] = [

@@ -5,10 +5,12 @@ import { Box3, MathUtils, Spherical, Vector3 } from "three";
 
 import {
   EYE_HEIGHT,
-  PEDESTAL_TOP,
+  BASE_TOP,
+  FACE_ZOOM,
   azimuthFromHeading,
   facedIndex,
   headingFromAzimuth,
+  magnetHeading,
   slotHeading,
   slotPosition,
   snapHeading,
@@ -49,6 +51,8 @@ const FOCUS = {
   mouseButtons: { left: ACTION.ROTATE, middle: ACTION.DOLLY, right: ACTION.NONE, wheel: ACTION.DOLLY },
   touches: { one: ACTION.TOUCH_ROTATE, two: ACTION.TOUCH_DOLLY, three: ACTION.NONE },
 } as const;
+const SMOOTH = 0.25; // drag and keys
+const SETTLE = 0.6; // the magnet: slower, a pull rather than a snap
 const FOCUS_BACK = 2.4; // horizontal metres from the product towards the ring centre
 const FOCUS_UP = 0.6;
 /** Phones: the product sheet covers the bottom of the screen, so drop the camera this far (metres) to lift the product above it. */
@@ -79,9 +83,10 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
   const reportFaced = () => {
     const c = ref.current;
     if (!c || selected !== null) return;
-    const f = facedIndex(headingFromAzimuth(c.azimuthAngle), count);
+    const f = facedIndex(headingFromAzimuth(c.azimuthAngle), count, undefined, faced.current ?? null);
     if (f === faced.current) return;
     faced.current = f;
+    void c.zoomTo(f === null ? 1 : FACE_ZOOM, anim);
     onFaced(f);
   };
   useFrame(reportFaced);
@@ -89,7 +94,9 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
   const snap = () => {
     const c = ref.current;
     if (!c || selected !== null || dragging.current) return;
-    const h = snapHeading(headingFromAzimuth(c.azimuthAngle), count);
+    const h = magnetHeading(headingFromAzimuth(c.azimuthAngle), count);
+    if (h === null) return;
+    c.smoothTime = reducedMotion ? 0 : SETTLE;
     void c.rotateAzimuthTo(azimuthFromHeading(h), anim);
   };
 
@@ -105,11 +112,14 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     prevSelected.current = selected;
     if (!c || selected === prev) return;
 
+    c.smoothTime = reducedMotion ? 0 : SMOOTH;
     if (selected === null) {
+      void c.zoomTo(FACE_ZOOM, anim); // the return heading is always a slot
       void c.setFocalOffset(0, 0, 0, anim);
       flyTo(c, RING_EYE, ringTarget(ringHeading.current), anim);
       return;
     }
+    void c.zoomTo(1, anim);
     // Same breakpoint as the sheet in Overlay (Tailwind md).
     void c.setFocalOffset(0, matchMedia("(min-width: 48rem)").matches ? 0 : FOCUS_LIFT, 0, anim);
     ringHeading.current = slotHeading(selected, count);
@@ -117,8 +127,8 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     const obj = scene.getObjectByName(`product-${selected}`);
     const box = obj ? new Box3().setFromObject(obj) : null;
     if (box && !box.isEmpty()) box.getCenter(target);
-    // Model still loading: aim at the pedestal top instead.
-    else target.set(...slotPosition(selected, count)).setY(PEDESTAL_TOP + 0.15);
+    // Model still loading: aim at the base top instead.
+    else target.set(...slotPosition(selected, count)).setY(BASE_TOP + 0.3);
     // ponytail: target fixed at fly-in; a model that finishes loading mid-focus isn't re-aimed.
     const back = new Vector3(-target.x, 0, -target.z).normalize().multiplyScalar(FOCUS_BACK);
     flyTo(c, target.clone().add(back).setY(target.y + FOCUS_UP), target, anim);
@@ -146,6 +156,7 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
       e.preventDefault();
       // From where the camera is headed, so quick repeat presses each count.
       const h = snapHeading(headingFromAzimuth(c.getSpherical(sph, true).theta), count);
+      c.smoothTime = reducedMotion ? 0 : SMOOTH;
       void c.rotateAzimuthTo(azimuthFromHeading(h + (dir * TAU) / count), anim);
       reportFaced();
     };
@@ -157,10 +168,11 @@ export function RingControls({ count, selected, onFaced, onSelect, reducedMotion
     <CameraControls
       ref={ref}
       makeDefault
-      smoothTime={reducedMotion ? 0 : 0.25}
+      smoothTime={reducedMotion ? 0 : SMOOTH}
       {...(selected === null ? RING : FOCUS)}
       onControlStart={() => {
         dragging.current = true;
+        if (ref.current) ref.current.smoothTime = reducedMotion ? 0 : SMOOTH;
         onDrag?.();
       }}
       onControlEnd={() => {
