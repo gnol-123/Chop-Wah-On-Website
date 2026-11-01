@@ -70,7 +70,10 @@ export function Overlay({ lang, selected, onBack, hint = false }: Props) {
   return (
     <div data-testid="overlay" className="pointer-events-none absolute inset-0 z-[5]">
       {hint && selected === null && (
-        <p className="absolute inset-x-0 top-20 px-4 text-center text-sm text-ink [overflow-wrap:anywhere]">{t.dragHint}</p>
+        // Landscape phones: up in the header row, clear of the faced product's name.
+        <p data-testid="drag-hint" className="absolute inset-x-0 top-20 px-4 text-center text-sm text-ink [overflow-wrap:anywhere] [@media(max-height:30rem)]:top-5">
+          {t.dragHint}
+        </p>
       )}
       {selected !== null && <Focus key={selected} lang={lang} index={selected} onBack={onBack} />}
     </div>

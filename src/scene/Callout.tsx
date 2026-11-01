@@ -1,20 +1,22 @@
 import { Html } from "@react-three/drei";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ProductName } from "~/components/ProductList";
 import { type Locale } from "~/i18n";
 import { type Product } from "~/products";
-import { calloutAnchor } from "./ring";
+import { calloutAnchor, isTap } from "./ring";
 
-const panel = "rounded-2xl bg-white/80 px-4 py-3 text-sm [overflow-wrap:anywhere]";
+const panel = "line-clamp-4 rounded-2xl bg-white/80 px-4 py-3 text-sm [overflow-wrap:anywhere]";
 const width = "w-[min(16rem,80vw)]";
 
-/** Same breakpoint as RingControls and the sheet in Overlay (Tailwind md). */
+/** Room beside the product grows with the aspect (fixed vertical fov), so portrait tablets stack too. */
+const WIDE = "(min-width: 50rem) and (min-aspect-ratio: 5/4)";
+
 function useWide() {
   // Client-only component: read the breakpoint up front so desktop never mounts the phone layout first.
-  const [wide, setWide] = useState(() => matchMedia("(min-width: 48rem)").matches);
+  const [wide, setWide] = useState(() => matchMedia(WIDE).matches);
   useEffect(() => {
-    const mq = matchMedia("(min-width: 48rem)");
+    const mq = matchMedia(WIDE);
     const sync = () => setWide(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -34,11 +36,13 @@ type Props = {
   onOpen: () => void;
 };
 
-/** Floating name above the faced product (tap to open it), with a description to each side, or below on phones. */
+/** Floating name above the faced product (tap to open it), with a description to each side, or docked at the bottom on phones. */
 export function Callout({ product, lang, index, count, footprint, height, onOpen }: Props) {
   const wide = useWide();
   const t = product.text[lang];
   const side = footprint + 0.15;
+  // Html shares the element the camera controls listen on: a drag that ends on the name is a turn, not a tap.
+  const down = useRef({ x: 0, y: 0 });
   return (
     <>
       <Html position={calloutAnchor(index, count, 0, height + 0.1)} zIndexRange={[4, 4]}>
@@ -46,8 +50,13 @@ export function Callout({ product, lang, index, count, footprint, height, onOpen
           <button
             type="button"
             data-testid="callout"
-            onClick={onOpen}
-            className="animate-pop block w-[min(20rem,90vw)] text-center text-3xl tracking-widest [overflow-wrap:anywhere] [text-shadow:0_0_10px_#fff] max-w-[90vw] md:w-[40rem] md:text-5xl"
+            onPointerDown={(e) => (down.current = { x: e.clientX, y: e.clientY })}
+            onClick={(e) => {
+              // detail 0: keyboard activation, which always opens.
+              if (e.detail && !isTap(Math.hypot(e.clientX - down.current.x, e.clientY - down.current.y))) return;
+              onOpen();
+            }}
+            className="animate-pop block w-max max-w-[min(20rem,90vw)] text-center text-3xl tracking-widest [overflow-wrap:anywhere] [text-shadow:0_0_10px_#fff] [@media(min-width:48rem)_and_(min-height:30rem)]:max-w-[min(40rem,90vw)] [@media(min-width:48rem)_and_(min-height:30rem)]:text-5xl"
           >
             <ProductName t={t} />
           </button>
@@ -71,8 +80,14 @@ export function Callout({ product, lang, index, count, footprint, height, onOpen
           </Html>
         </>
       ) : (
-        <Html position={calloutAnchor(index, count, 0, -0.08)} zIndexRange={[4, 4]} pointerEvents="none">
-          <div className="flex -translate-x-1/2 flex-col gap-2 text-center">
+        // Docked to the bottom of the canvas, growing up: HTML is fixed px while the 3D framing scales with height.
+        <Html
+          position={calloutAnchor(index, count, 0, 0)}
+          calculatePosition={(_, __, size) => [size.width / 2, size.height]}
+          zIndexRange={[4, 4]}
+          pointerEvents="none"
+        >
+          <div className="flex -translate-x-1/2 -translate-y-full flex-col gap-2 pb-3 text-center">
             <p data-testid="callout-left" className={`${panel} ${width} animate-emerge-down`}>
               {t.short}
             </p>

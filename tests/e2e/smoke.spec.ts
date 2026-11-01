@@ -130,16 +130,15 @@ test("letting go near a product settles onto it", async ({ page }) => {
 });
 
 // On-screen text
-const names = { km: products[0]!.text.km, en: products[0]!.text.en };
+const fullName = (i: number, lang: "km" | "en") => products[i]!.text[lang].name + (products[i]!.text[lang].nameEmphasis ?? "");
 
 for (const lang of ["km", "en"] as const) {
   test(`callout shows product name and text (${lang})`, async ({ page }) => {
     await page.goto(`/${lang}`);
     const hero = page.getByTestId("hero");
     await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
-    // Scoped: the sr-only list also holds the names, and 1px elements count as visible.
-    await expect(hero.getByText(names[lang].name, { exact: false }).first()).toBeVisible();
-    await expect(hero.getByText(names[lang].short)).toBeVisible(LOAD);
+    await expect(page.getByTestId("callout")).toContainText(fullName(0, lang), LOAD);
+    await expect(page.getByTestId("callout-left")).toContainText(products[0]!.text[lang].short);
   });
 }
 
@@ -150,9 +149,11 @@ test("callout follows the faced product", async ({ page }) => {
   const callout = page.getByTestId("callout");
   const left = page.getByTestId("callout-left");
   await expect(callout).toHaveCount(1, LOAD);
+  await expect(callout).toContainText(fullName(0, "en"));
   await expect(left).toContainText(products[0]!.text.en.short);
   await page.keyboard.press("ArrowRight");
   await expect(hero).toHaveAttribute("data-faced", "1", LOAD);
+  await expect(callout).toContainText(fullName(1, "en"), LOAD);
   await expect(left).toContainText(products[1]!.text.en.short);
   await page.keyboard.press("Enter");
   await expect(hero).toHaveAttribute("data-selected", "1");
@@ -166,22 +167,62 @@ test("tapping callout opens product", async ({ page }) => {
   await expect(page.getByTestId("hero")).toHaveAttribute("data-selected", "0");
 });
 
-test("callout fits at 360px in km", async ({ page }) => {
-  // Reduced motion: no pop/emerge transforms in flight while measuring.
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.setViewportSize({ width: 360, height: 740 });
-  await page.goto("/km");
-  await expect(page.getByTestId("hero")).toHaveAttribute("data-faced", "0", LOAD);
-  const header = (await page.locator("header").boundingBox())!;
-  for (const id of ["callout", "callout-left", "callout-right"]) {
-    await expect(page.getByTestId(id)).toBeVisible(LOAD);
-    const box = (await page.getByTestId(id).boundingBox())!;
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(360);
-    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
-    expect(box.y + box.height).toBeLessThanOrEqual(740);
-  }
+test("dragging from the callout does not open the product", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  const box = (await page.getByTestId("callout").boundingBox(LOAD))!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  // The model loader fades out over the callout.
+  await page.waitForFunction((p) => document.elementFromPoint(p.x, p.y)?.closest("[data-testid=callout]"), { x, y }, { timeout: 45_000 });
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  await expect(hero).toHaveAttribute("data-selected", "");
 });
+
+// Long Khmer in both descriptions: name under the drag hint, each panel on screen, under the name and above the footer.
+const LONG_KM = "ការពិពណ៌នា ".repeat(12);
+for (const [width, height] of [[360, 640], [390, 844], [768, 1024], [1280, 720], [844, 390]] as const) {
+  for (const i of [0, 1]) {
+    test(`callout fits at ${width}x${height} on product ${i} in km`, async ({ page }) => {
+      // Reduced motion: no pop/emerge transforms in flight while measuring.
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width, height });
+      await page.goto("/km");
+      const hero = page.getByTestId("hero");
+      await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+      if (i) {
+        await page.keyboard.press("ArrowRight");
+        await expect(hero).toHaveAttribute("data-faced", String(i), LOAD);
+      }
+      await expect(page.getByTestId("callout")).toContainText(fullName(i, "km"), LOAD);
+      for (const id of ["callout-left", "callout-right"])
+        await page.getByTestId(id).evaluate((el, text) => (el.textContent = text), LONG_KM);
+      // The hint sits under the header, or in its row on landscape phones.
+      const hint = (await page.getByTestId("drag-hint").boundingBox())!;
+      const footer = (await page.locator("footer").boundingBox())!;
+      // Html follows the camera a frame behind: measure until it holds.
+      await expect(async () => {
+        const name = (await page.getByTestId("callout").boundingBox())!;
+        expect(name.x).toBeGreaterThanOrEqual(0);
+        expect(name.x + name.width).toBeLessThanOrEqual(width);
+        expect(name.y).toBeGreaterThanOrEqual(hint.y + hint.height);
+        for (const id of ["callout-left", "callout-right"]) {
+          const box = (await page.getByTestId(id).boundingBox())!;
+          expect(box.x, id).toBeGreaterThanOrEqual(0);
+          expect(box.x + box.width, id).toBeLessThanOrEqual(width);
+          expect(box.y, id).toBeGreaterThanOrEqual(name.y + name.height);
+          expect(box.y + box.height, id).toBeLessThanOrEqual(footer.y);
+        }
+      }).toPass({ timeout: 5_000 });
+    });
+  }
+}
 
 test("callout does not animate with reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });

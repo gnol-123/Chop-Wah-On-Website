@@ -32,7 +32,7 @@ Round 1 is the landing page only, live on Railway. Ordering, payment and the tra
 There are three states. The mockup is `.superpowers/brainstorm/*/content/hero-flow.html`. Its colours are placeholders (see "Look"); the scene is sky and water.
 
 1. **Ring.** The camera sits at the centre, at eye height just above the water, and only turns left and right. Dragging (mouse) or swiping (touch) turns the view. Products sit on low bases spaced evenly around the ring, standing in calm blue water under the sky. With two products, they face each other across the ring.
-2. **Facing.** When a product is roughly centred in view, a floating label appears: its name in a stylised face above, the short description to the left and the detail to the right. On phones both sit below the product. The descriptions emerge from behind the product. Tapping the name opens it. Looking away hides the label.
+2. **Facing.** When a product is roughly centred in view, a floating label appears: its name in a stylised face above, the short description to the left and the detail to the right. On phones and portrait screens both sit at the bottom of the screen, above the footer. The descriptions emerge from the product. Tapping the name opens it. Looking away hides the label.
 3. **Product.** Clicking or tapping a product flies the camera in, and dragging now orbits the product. A panel shows the name, selectable size chips, a longer description and an order button. The order button is visible but does nothing this round. A back control, or Escape, returns to the ring at the same heading.
 
 The header has the logo top-left and the `ខ្មែរ | EN` switch top-right. There's a minimal footer. All text is real page text, never drawn into the canvas.

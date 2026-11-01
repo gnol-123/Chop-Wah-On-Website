@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Footer } from "~/components/Footer";
 import { ProductList } from "~/components/ProductList";
 import { dict, type Locale } from "~/i18n";
 import { products } from "~/products";
@@ -162,7 +161,6 @@ export function Hero({ lang }: { lang: Locale }) {
         </>
       )}
       <ProductList lang={lang} visible={failed} />
-      {selected === null && <Footer t={dict[lang]} />}
     </div>
   );
 }
