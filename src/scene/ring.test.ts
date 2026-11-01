@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   BASE_TOP,
   EYE_HEIGHT,
+  FACING_THRESHOLD,
   RING_RADIUS,
   azimuthFromHeading,
   calloutAnchor,
   facedIndex,
   headingFromAzimuth,
   isTap,
+  magnetHeading,
   slotHeading,
   slotPosition,
   snapHeading,
@@ -39,6 +41,17 @@ describe("ring", () => {
     expect(facedIndex(0.25, 2)).toBeNull();
     expect(facedIndex(0, 0)).toBeNull();
     expect(facedIndex(2, 1)).toBeNull();
+  });
+  it("magnet catches only near a slot", () => {
+    expect(magnetHeading(0.1, 2)).toBeCloseTo(0);
+    expect(magnetHeading(Math.PI - 0.2, 2)).toBeCloseTo(Math.PI);
+    expect(magnetHeading(0.6, 2)).toBeNull();
+    expect(magnetHeading(TAU + 0.1, 2)).toBeCloseTo(TAU);
+  });
+  it("faced has hysteresis", () => {
+    expect(facedIndex(0.22, 2)).toBeNull();
+    expect(facedIndex(0.22, 2, FACING_THRESHOLD, 0)).toBe(0);
+    expect(facedIndex(0.3, 2, FACING_THRESHOLD, 0)).toBeNull();
   });
   it("snapHeading", () => {
     expect(snapHeading(TAU + 0.2, 2)).toBeCloseTo(TAU);

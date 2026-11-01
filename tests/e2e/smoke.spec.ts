@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { dict } from "~/i18n";
 import { products } from "~/products";
 
@@ -88,6 +88,39 @@ test("reduced motion disables transitions", async ({ page }) => {
   await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
   await page.keyboard.press("ArrowRight");
   await expect(hero).toHaveAttribute("data-faced", "1", { timeout: 100 });
+});
+
+// Free turning
+async function drag(page: Page, dx: number) {
+  const box = (await page.locator("canvas").boundingBox())!;
+  const y = box.y + box.height / 2;
+  const x = box.x + box.width / 2;
+  await page.mouse.move(x, y);
+  // The model loader covers the canvas until the models are in.
+  await page.waitForFunction((p) => document.elementFromPoint(p.x, p.y)?.tagName === "CANVAS", { x, y }, LOAD);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y, { steps: 10 });
+  await page.mouse.up();
+}
+
+test("turning stops where you let go, away from products", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  await drag(page, 172);
+  // Long enough for the old snap-to-nearest to have settled.
+  await page.waitForTimeout(3000);
+  await expect(hero).toHaveAttribute("data-faced", "");
+});
+
+test("letting go near a product settles onto it", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/en");
+  const hero = page.getByTestId("hero");
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
+  await drag(page, 29);
+  await expect(hero).toHaveAttribute("data-faced", "0", LOAD);
 });
 
 // On-screen text
